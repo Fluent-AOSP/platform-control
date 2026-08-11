@@ -116,11 +116,11 @@ export OUT_DIR
 (
   cd "$AOSP_ROOT"
   repo manifest -r -o "$run_dir/source-manifest.xml"
-  # AOSP envsetup is not authored for nounset shells.
+  # AOSP envsetup and the shell functions it defines (including lunch/m) are
+  # not authored for nounset. This is isolated to the build subshell.
   set +u
   # shellcheck disable=SC1091
   source build/envsetup.sh
-  set -u
   lunch "$LUNCH_TARGET"
   {
     printf 'TARGET_PRODUCT=%s\n' "${TARGET_PRODUCT:-}"

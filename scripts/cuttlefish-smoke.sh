@@ -98,11 +98,12 @@ export OUT_DIR
 
 # Resolve output paths and functions from the selected build in this shell.
 cd "$AOSP_ROOT"
+# AOSP envsetup and its lunch helper are not authored for nounset.
 set +u
 # shellcheck disable=SC1091
 source build/envsetup.sh
-set -u
 lunch "$LUNCH_TARGET"
+set -u
 
 [[ "${TARGET_PRODUCT:-}" == aosp_cf_x86_64_only_phone ]] || die "lunch resolved unexpected product: ${TARGET_PRODUCT:-unset}"
 [[ -n "${ANDROID_PRODUCT_OUT:-}" && -d "$ANDROID_PRODUCT_OUT" ]] || die 'ANDROID_PRODUCT_OUT is missing; build the target first'
