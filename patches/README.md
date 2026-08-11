@@ -1,7 +1,7 @@
 # Source compatibility patches
 
 The revision lock remains an unmodified upstream AOSP baseline. Apply the patches
-in this directory after syncing and before building. Each patch is narrow,
+in numeric order after syncing and before building. Each patch is narrow,
 reviewable, and recorded separately from the generated manifest lock.
 
 ## Soong/Siso external `OUT_DIR`
@@ -20,13 +20,27 @@ The patch converts the generated path to an execution-root-relative path and
 adds unit coverage for both relative and absolute external output directories.
 It does not relocate output or change product behavior.
 
+## CI test packaging with an external `OUT_DIR`
+
+`0002-build-soong-ci-tests-external-out-dir.patch` fixes the next bootstrap
+failure in the same `build/soong` project. The CI test packager previously used
+a string-prefix heuristic to distinguish product files from host files. That
+heuristic only worked when `OUT_DIR` began with the literal relative path
+`out`; an absolute host JAR was consequently passed to `PathForModuleOut` and
+rejected as outside the module directory.
+
+The patch uses `filepath.Rel` plus an explicit containment check, preserving the
+intended exclusion of host files for both relative and absolute output roots.
+It adds focused tests for product files, host files, and sibling directories.
+
 Apply to a clean locked checkout:
 
 ```bash
 cd /mnt/aosp/build/soong
 test "$(git rev-parse HEAD)" = 6722dd8833db7482df1a2543ca3fcf67ddf0f7b1
 git am /home/azureuser/fluent-aosp/patches/0001-build-soong-siso-external-out-dir.patch
-../../prebuilts/go/linux-x86/bin/go test ./ui/build
+git am /home/azureuser/fluent-aosp/patches/0002-build-soong-ci-tests-external-out-dir.patch
+../../prebuilts/go/linux-x86/bin/go test ./ui/build ./ci_tests
 ```
 
 The resulting local commit is expected to be recorded by the build evidence's
