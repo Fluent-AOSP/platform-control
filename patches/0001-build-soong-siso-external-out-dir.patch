@@ -1,0 +1,111 @@
+From 72c3d3c41d9011a13b12851fbc6ed944cb4e91c9 Mon Sep 17 00:00:00 2001
+From: Fluent AOSP Build <fluent-aosp@localhost>
+Date: Tue, 11 Aug 2026 19:03:45 +0000
+Subject: [PATCH] Make Siso config path relative to execution root
+
+Change-Id: Ife12c2d40133baf8531185f6e2723d9cf72e3732
+---
+ ui/build/rbe.go      | 28 ++++++++++++++++++++++++++--
+ ui/build/rbe_test.go | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 59 insertions(+), 2 deletions(-)
+
+diff --git a/ui/build/rbe.go b/ui/build/rbe.go
+index b3d95c4532..1c237f6bdf 100644
+--- a/ui/build/rbe.go
++++ b/ui/build/rbe.go
+@@ -182,6 +182,22 @@ def init(ctx):
+     return main.generate(ctx, vars, imports)
+ `))
+ 
++func relativeToSisoExecRoot(path string) (string, error) {
++	execRoot, err := os.Getwd()
++	if err != nil {
++		return "", fmt.Errorf("get Siso execution root: %w", err)
++	}
++	absPath, err := filepath.Abs(path)
++	if err != nil {
++		return "", fmt.Errorf("make Siso config path absolute: %w", err)
++	}
++	relPath, err := filepath.Rel(execRoot, absPath)
++	if err != nil {
++		return "", fmt.Errorf("make Siso config path relative to %q: %w", execRoot, err)
++	}
++	return relPath, nil
++}
++
+ func createSisoConfigDir(ctx Context, config Config, value string) string {
+ 	// We need to fabricate a working directory.
+ 	confDir := filepath.Join(config.OutDir(), "siso_config")
+@@ -190,7 +206,11 @@ func createSisoConfigDir(ctx Context, config Config, value string) string {
+ 		if err != nil {
+ 			ctx.Fatalf("${SISO_CONFIG_DIR}/main.star is missing: %w", err)
+ 		}
+-		return value
++		relDir, err := relativeToSisoExecRoot(confDir)
++		if err != nil {
++			ctx.Fatalf("Could not make Siso config path exec-root-relative: %v", err)
++		}
++		return relDir
+ 	}
+ 	templateConfig := struct {
+ 		Config       *Config
+@@ -210,7 +230,11 @@ func createSisoConfigDir(ctx Context, config Config, value string) string {
+ 	if err := os.WriteFile(confFile, sb.Bytes(), 0666); err != nil {
+ 		ctx.Fatalf("Failed to write siso config to %q: %w", confFile, err)
+ 	}
+-	return confDir
++	relDir, err := relativeToSisoExecRoot(confDir)
++	if err != nil {
++		ctx.Fatalf("Could not make Siso config path exec-root-relative: %v", err)
++	}
++	return relDir
+ }
+ 
+ // Create a script for siso to get credentials.
+diff --git a/ui/build/rbe_test.go b/ui/build/rbe_test.go
+index d1b8e26445..5a300c3a8f 100644
+--- a/ui/build/rbe_test.go
++++ b/ui/build/rbe_test.go
+@@ -26,6 +26,39 @@ import (
+ 	"android/soong/ui/logger"
+ )
+ 
++func TestRelativeToSisoExecRoot(t *testing.T) {
++	tests := []struct {
++		name string
++		path string
++	}{
++		{name: "relative output", path: filepath.Join("out", "siso_config")},
++		{name: "absolute external output", path: filepath.Join(t.TempDir(), "siso_config")},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			got, err := relativeToSisoExecRoot(tt.path)
++			if err != nil {
++				t.Fatalf("relativeToSisoExecRoot(%q): %v", tt.path, err)
++			}
++			if filepath.IsAbs(got) {
++				t.Fatalf("relativeToSisoExecRoot(%q) returned absolute path %q", tt.path, got)
++			}
++			gotAbs, err := filepath.Abs(got)
++			if err != nil {
++				t.Fatalf("make returned path absolute: %v", err)
++			}
++			wantAbs, err := filepath.Abs(tt.path)
++			if err != nil {
++				t.Fatalf("make input path absolute: %v", err)
++			}
++			if gotAbs != wantAbs {
++				t.Fatalf("relativeToSisoExecRoot(%q) resolved to %q, want %q", tt.path, gotAbs, wantAbs)
++			}
++		})
++	}
++}
++
+ func TestDumpRBEMetrics(t *testing.T) {
+ 	// RBE is only supported on linux.
+ 	if runtime.GOOS != "linux" {
+-- 
+2.53.0
+

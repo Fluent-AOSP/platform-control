@@ -57,6 +57,7 @@ Real operations are explicit:
 
 ```bash
 make init-sync        # network/disk intensive; initializes and syncs /mnt/aosp
+# Apply documented compatibility patches from patches/README.md after a fresh sync.
 make build            # builds into /home/azureuser/aosp-out
 make smoke-sdk        # resets the dedicated bootstrap AVD and collects evidence
 make smoke-cvd        # boots locally built images and collects evidence
@@ -102,4 +103,4 @@ No script pushes or publishes. Only the explicit Telegram setup/notifier and doc
 
 ## Status
 
-M0 foundation and M1 source sync are complete: the clean AOSP checkout is pinned by `manifests/aosp-android17.lock.xml`. The earlier SDK bootstrap run proved basic KVM/ADB/screenshot mechanics but predates the current full evidence contract and is retained as legacy bring-up evidence. The current gate is M2: the first locked AOSP build, followed by the locally built Cuttlefish loop. See [ROADMAP.md](ROADMAP.md).
+M0 foundation and M1 source sync are complete: the upstream AOSP checkout is pinned by `manifests/aosp-android17.lock.xml`. A narrow, unit-tested Soong/Siso compatibility patch required for an external absolute `OUT_DIR` is retained under [`patches/`](patches/README.md) and recorded separately from that upstream lock. The earlier SDK bootstrap run proved basic KVM/ADB/screenshot mechanics but predates the current full evidence contract and is retained as legacy bring-up evidence. The current gate is M2: the first locked AOSP build, followed by the locally built Cuttlefish loop. See [ROADMAP.md](ROADMAP.md).

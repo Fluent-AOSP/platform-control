@@ -1,0 +1,2 @@
+# Mbox patches necessarily contain context-line prefixes before source tabs and blanks.
+patches/*.patch whitespace=-blank-at-eol,-space-before-tab,-blank-at-eof
