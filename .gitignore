@@ -1,0 +1,29 @@
+# Pi/subagent runtime state
+.pi-subagents/
+.pi/
+
+# Local overrides and secrets
+.env
+.env.*
+!.env.example
+*.local
+telegram.conf
+.secrets/
+progress.md
+
+# Prevent an overridden source root from becoming repository content
+/.repo/
+/aosp/
+/source/
+
+# Generated build/test state
+artifacts/
+out/
+*.log
+*.pid
+
+# Editor/OS noise
+.idea/
+.vscode/
+*.swp
+.DS_Store
