@@ -15,7 +15,8 @@ and failure evidence through one explicit ADB serial, and stop the owned instanc
 
 Environment:
   AOSP_ROOT          Default: /mnt/aosp
-  OUT_DIR            Default: /home/azureuser/aosp-out
+  OUT_DIR            Physical output storage (default: /home/azureuser/aosp-out)
+  AOSP_OUT_ALIAS     Source-root alias passed to AOSP (default: out-fluent)
   LUNCH_TARGET       Default/approved: aosp_cf_x86_64_only_phone-aosp_current-userdebug
   ALLOW_LUNCH_TARGET_OVERRIDE  1 permits a reviewed target override
   ANDROID_SDK_ROOT   Used for adb fallback (default: /opt/android-sdk)
@@ -48,6 +49,7 @@ esac
 
 AOSP_ROOT=${AOSP_ROOT:-/mnt/aosp}
 OUT_DIR=${OUT_DIR:-/home/azureuser/aosp-out}
+AOSP_OUT_ALIAS=${AOSP_OUT_ALIAS:-out-fluent}
 APPROVED_LUNCH_TARGET=aosp_cf_x86_64_only_phone-aosp_current-userdebug
 LUNCH_TARGET=${LUNCH_TARGET:-$APPROVED_LUNCH_TARGET}
 ALLOW_LUNCH_TARGET_OVERRIDE=${ALLOW_LUNCH_TARGET_OVERRIDE:-0}
@@ -83,7 +85,8 @@ case "$ANDROID_SERIAL" in
 esac
 
 if [[ "$DRY_RUN" == 1 ]]; then
-  printf 'DRY-RUN: source %q; lunch %q with OUT_DIR=%q\n' "$AOSP_ROOT/build/envsetup.sh" "$LUNCH_TARGET" "$OUT_DIR"
+  printf 'DRY-RUN: require %q to resolve to physical output %q\n' "$AOSP_ROOT/$AOSP_OUT_ALIAS" "$OUT_DIR"
+  printf 'DRY-RUN: source %q; lunch %q with OUT_DIR=%q\n' "$AOSP_ROOT/build/envsetup.sh" "$LUNCH_TARGET" "$AOSP_OUT_ALIAS"
   printf 'DRY-RUN: require same-build ANDROID_PRODUCT_OUT images and ANDROID_HOST_OUT/bin/launch_cvd\n'
   printf 'DRY-RUN: acquire instance lock; launch with unique HOME, --daemon, --report_anonymous_usage_stats=n'
   [[ "$INSTANCE_NUM" == 1 ]] || printf ', --base_instance_num=%q' "$INSTANCE_NUM"
@@ -94,7 +97,9 @@ fi
 require_file "$AOSP_ROOT/build/envsetup.sh"
 require_dir "$AOSP_ROOT/.repo"
 install -d -m 0750 "$OUT_DIR" "$ARTIFACT_ROOT"
-export OUT_DIR
+OUT_STORAGE_DIR=$OUT_DIR
+prepare_aosp_out_alias "$AOSP_ROOT" "$OUT_STORAGE_DIR" "$AOSP_OUT_ALIAS"
+export OUT_DIR="$AOSP_OUT_ALIAS"
 
 # Resolve output paths and functions from the selected build in this shell.
 cd "$AOSP_ROOT"
@@ -221,7 +226,8 @@ repo manifest -r -o "$run_dir/source-manifest.xml"
   printf 'started_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf 'runtime=cuttlefish\n'
   printf 'aosp_root=%s\n' "$AOSP_ROOT"
-  printf 'out_dir=%s\n' "$OUT_DIR"
+  printf 'out_storage_dir=%s\n' "$OUT_STORAGE_DIR"
+  printf 'aosp_out_alias=%s\n' "$OUT_DIR"
   printf 'lunch_target=%s\n' "$LUNCH_TARGET"
   printf 'target_product=%s\n' "$TARGET_PRODUCT"
   printf 'android_product_out=%s\n' "$ANDROID_PRODUCT_OUT"

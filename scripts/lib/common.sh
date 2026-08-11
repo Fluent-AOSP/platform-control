@@ -21,6 +21,24 @@ require_positive_integer() {
   [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "$1 must be a positive integer (got: $2)"
 }
 
+prepare_aosp_out_alias() {
+  local aosp_root=$1 storage_dir=$2 alias_name=$3 alias_path expected actual
+  [[ "$storage_dir" == /* ]] || die "OUT_DIR storage path must be absolute: $storage_dir"
+  [[ "$alias_name" =~ ^[A-Za-z0-9._-]+$ ]] || die "AOSP_OUT_ALIAS must be one safe path component: $alias_name"
+  require_dir "$aosp_root"
+  install -d -m 0750 "$storage_dir"
+  expected=$(readlink -f -- "$storage_dir")
+  alias_path="$aosp_root/$alias_name"
+  if [[ -L "$alias_path" ]]; then
+    actual=$(readlink -f -- "$alias_path")
+    [[ "$actual" == "$expected" ]] || die "AOSP output alias points elsewhere: $alias_path -> $actual"
+  elif [[ -e "$alias_path" ]]; then
+    die "AOSP output alias path exists and is not a symlink: $alias_path"
+  else
+    ln -s -- "$expected" "$alias_path"
+  fi
+}
+
 quote_command() {
   printf 'DRY-RUN:'
   printf ' %q' "$@"

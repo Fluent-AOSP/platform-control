@@ -58,7 +58,7 @@ Real operations are explicit:
 ```bash
 make init-sync        # network/disk intensive; initializes and syncs /mnt/aosp
 # Apply documented compatibility patches from patches/README.md after a fresh sync.
-make build            # builds into /home/azureuser/aosp-out
+make build            # builds via /mnt/aosp/out-fluent into /home/azureuser/aosp-out
 make smoke-sdk        # resets the dedicated bootstrap AVD and collects evidence
 make smoke-cvd        # boots locally built images and collects evidence
 ```

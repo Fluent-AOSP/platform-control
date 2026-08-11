@@ -43,5 +43,15 @@ git am /home/azureuser/fluent-aosp/patches/0002-build-soong-ci-tests-external-ou
 ../../prebuilts/go/linux-x86/bin/go test ./ui/build ./ci_tests
 ```
 
-The resulting local commit is expected to be recorded by the build evidence's
-revision manifest. Do not amend the upstream lock to the local-only commit.
+The resulting local commits are expected to be recorded by the build evidence's
+revision manifest. Do not amend the upstream lock to the local-only commits.
+
+## Output path strategy
+
+The physical output remains `/home/azureuser/aosp-out`. Build and Cuttlefish
+scripts create and validate `/mnt/aosp/out-fluent` as a symlink to that storage,
+then pass the relative `OUT_DIR=out-fluent` to AOSP. Android 17 still contains
+additional sandbox command generation that prepends `$PWD` to output paths;
+using the source-root alias avoids corrupting those paths while retaining the
+larger root filesystem for output. Scripts refuse to replace an existing path
+or a symlink that resolves anywhere else.

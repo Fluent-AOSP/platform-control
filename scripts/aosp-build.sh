@@ -13,7 +13,8 @@ Build the approved Cuttlefish phone target without cleaning source or output.
 
 Environment:
   AOSP_ROOT       Source path (default: /mnt/aosp)
-  OUT_DIR         Output path (default: /home/azureuser/aosp-out)
+  OUT_DIR         Physical output storage (default: /home/azureuser/aosp-out)
+  AOSP_OUT_ALIAS  Source-root alias passed to AOSP (default: out-fluent)
   LUNCH_TARGET    Default/approved: aosp_cf_x86_64_only_phone-aosp_current-userdebug
   ALLOW_LUNCH_TARGET_OVERRIDE  1 permits a reviewed target override
   BUILD_JOBS      Default: 12 (conservative for the 62 GiB reference host)
@@ -36,6 +37,7 @@ esac
 
 AOSP_ROOT=${AOSP_ROOT:-/mnt/aosp}
 OUT_DIR=${OUT_DIR:-/home/azureuser/aosp-out}
+AOSP_OUT_ALIAS=${AOSP_OUT_ALIAS:-out-fluent}
 APPROVED_LUNCH_TARGET=aosp_cf_x86_64_only_phone-aosp_current-userdebug
 LUNCH_TARGET=${LUNCH_TARGET:-$APPROVED_LUNCH_TARGET}
 ALLOW_LUNCH_TARGET_OVERRIDE=${ALLOW_LUNCH_TARGET_OVERRIDE:-0}
@@ -54,8 +56,9 @@ fi
 if [[ "$DRY_RUN" == 1 ]]; then
   printf 'DRY-RUN: require %q and its envsetup/manifest files\n' "$AOSP_ROOT"
   quote_command install -d -m 0755 "$OUT_DIR" "$ARTIFACT_ROOT"
-  printf 'DRY-RUN: source %q; lunch %q; timeout %q m -j%q\n' \
-    "$AOSP_ROOT/build/envsetup.sh" "$LUNCH_TARGET" "$BUILD_TIMEOUT" "$BUILD_JOBS"
+  printf 'DRY-RUN: require %q to resolve to physical output %q\n' "$AOSP_ROOT/$AOSP_OUT_ALIAS" "$OUT_DIR"
+  printf 'DRY-RUN: source %q; lunch %q with OUT_DIR=%q; timeout %q m -j%q\n' \
+    "$AOSP_ROOT/build/envsetup.sh" "$LUNCH_TARGET" "$AOSP_OUT_ALIAS" "$BUILD_TIMEOUT" "$BUILD_JOBS"
   printf 'DRY-RUN: record manifest, environment, product/host outputs, and image checksums\n'
   exit 0
 fi
@@ -67,6 +70,7 @@ require_command python3
 require_dir "$AOSP_ROOT/.repo"
 require_file "$AOSP_ROOT/build/envsetup.sh"
 install -d -m 0755 "$OUT_DIR" "$ARTIFACT_ROOT"
+prepare_aosp_out_alias "$AOSP_ROOT" "$OUT_DIR" "$AOSP_OUT_ALIAS"
 run_dir=$(new_run_dir "$ARTIFACT_ROOT" aosp-build)
 {
   for tool in bash git make ninja python3 javac; do
@@ -102,11 +106,11 @@ trap build_cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-export OUT_DIR
 {
   printf 'started_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf 'aosp_root=%s\n' "$AOSP_ROOT"
-  printf 'out_dir=%s\n' "$OUT_DIR"
+  printf 'out_storage_dir=%s\n' "$OUT_DIR"
+  printf 'aosp_out_alias=%s\n' "$AOSP_OUT_ALIAS"
   printf 'lunch_target=%s\n' "$LUNCH_TARGET"
   printf 'build_jobs=%s\n' "$BUILD_JOBS"
   printf 'repo_launcher=%s\n' "$(repo version 2>&1 | head -1)"
@@ -115,6 +119,7 @@ export OUT_DIR
 
 (
   cd "$AOSP_ROOT"
+  export OUT_DIR="$AOSP_OUT_ALIAS"
   repo manifest -r -o "$run_dir/source-manifest.xml"
   # AOSP envsetup and the shell functions it defines (including lunch/m) are
   # not authored for nounset. This is isolated to the build subshell.

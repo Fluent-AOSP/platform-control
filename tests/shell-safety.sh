@@ -169,6 +169,14 @@ fi
 # Exercise evidence validators with synthetic inputs.
 # shellcheck source=../scripts/lib/common.sh
 source scripts/lib/common.sh
+alias_root="$sandbox/aosp-root"
+alias_storage="$sandbox/aosp-output"
+mkdir "$alias_root"
+prepare_aosp_out_alias "$alias_root" "$alias_storage" out-fluent
+[[ -L "$alias_root/out-fluent" ]]
+[[ $(readlink -f "$alias_root/out-fluent") == "$(readlink -f "$alias_storage")" ]]
+# Idempotent reuse must not replace or reject the validated alias.
+prepare_aosp_out_alias "$alias_root" "$alias_storage" out-fluent
 python3 - "$sandbox/valid.png" <<'PY'
 import struct
 import sys
