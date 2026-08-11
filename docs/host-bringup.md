@@ -59,7 +59,8 @@ Cuttlefish groups `kvm`, `cvdnetwork`, and `render` include `azureuser`. New log
 6. Booted the dedicated SDK AVD headlessly with KVM and SwiftShader, waited for `sys.boot_completed=1`, captured screenshots/logs/UI data, and stopped the owned process.
 7. Initialized `/mnt/aosp` on `android17-release` at manifest commit `29ace668ae756c7b8917c57abb440f6518844b0c`. The first source sync was interrupted by anonymous `android.googlesource.com` HTTP 429 throttling and two partial project initializations.
 8. Quarantined and rebuilt only the malformed `system/ca-certificates` and `external/vulkan-headers` metadata, rebuilt the absent `frameworks/base` Git index from its pinned HEAD, completed low-concurrency network/local sync passes, and verified `repo status` clean. `manifests/aosp-android17.lock.xml` pins all 1,084 projects; superproject use is disabled and omitted from the lock.
-9. Re-ran preflight in a fresh login context after group changes: all 22 checks passed, including KVM open and Emulator acceleration.
+9. Re-ran preflight in a fresh login context after group changes: all 22 original checks passed, including KVM open and Emulator acceleration.
+10. The first full product compilation reached 84% before a Trusty action proved that Ubuntu's fallback `unprivileged_userns` AppArmor profile denied `nsjail` mount setup. Installed the narrowly scoped profile retained at `config/aosp-nsjail.apparmor`, loaded it with `apparmor_parser`, and verified the exact Soong sandbox probe succeeds. The global `kernel.apparmor_restrict_unprivileged_userns=1` policy remains enabled. Preflight now includes this probe when the source-provided binary exists.
 
 Legacy bootstrap evidence: `/home/azureuser/android-test-artifacts/bootstrap-20260811T152831Z`
 
@@ -86,6 +87,14 @@ Current-contract SDK evidence: `/home/azureuser/android-test-artifacts/sdk-emula
 - Anonymous AOSP fetches from this Azure egress address have produced HTTP 429 responses. Sync defaults to four jobs; retries should be bounded and back off rather than creating a tight retry loop.
 - Package repositories and named branches move. Accepted builds must record exact package versions and a revision-locked manifest.
 - The SDK license files were accepted during host bring-up, but repository automation must not infer authorization from that fact or accept agreements silently on another host.
+- Ubuntu 24.04 and later restrict unprivileged user namespaces through AppArmor. AOSP and Trusty use the checked-in `nsjail` binary for build sandboxes. Install only the scoped profile rather than disabling the global restriction:
+
+  ```bash
+  sudo install -o root -g root -m 0644 config/aosp-nsjail.apparmor /etc/apparmor.d/aosp-nsjail
+  sudo apparmor_parser -r /etc/apparmor.d/aosp-nsjail
+  ```
+
+  The profile path assumes the approved `/mnt/aosp` source location and must be reviewed if `AOSP_ROOT` changes.
 
 ## Read-only recheck
 

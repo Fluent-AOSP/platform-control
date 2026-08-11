@@ -70,6 +70,18 @@ if [[ "$REQUIRE_CVD_GROUPS" == 1 ]]; then
   done
 fi
 
+nsjail="$AOSP_ROOT/prebuilts/build-tools/linux-x86/bin/nsjail"
+if [[ -x "$nsjail" ]]; then
+  if timeout 15 "$nsjail" -H android-build -e -u nobody -g nogroup \
+      -R / -B /tmp --disable_clone_newcgroup -- /bin/true >/dev/null 2>&1; then
+    pass 'AOSP nsjail can create a build sandbox'
+  else
+    fail 'AOSP nsjail cannot create a build sandbox; check AppArmor user-namespace policy'
+  fi
+else
+  warn "AOSP nsjail is absent; skipped sandbox probe ($nsjail)"
+fi
+
 memory_bytes=$(awk '/^MemTotal:/ {print $2 * 1024}' /proc/meminfo)
 minimum_memory_bytes=$((MEMORY_MIN_GIB * 1024 * 1024 * 1024))
 if awk -v actual="$memory_bytes" -v required="$minimum_memory_bytes" 'BEGIN {exit !(actual >= required)}'; then

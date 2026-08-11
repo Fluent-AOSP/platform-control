@@ -1,0 +1,11 @@
+# Permit AOSP's checked-in nsjail to create its build sandbox while retaining
+# Ubuntu's global restriction on unprivileged user namespaces.
+abi <abi/5.0>,
+include <tunables/global>
+
+profile aosp-nsjail /mnt/aosp/prebuilts/build-tools/linux-x86/bin/nsjail flags=(unconfined) {
+  userns,
+  @{exec_path} mr,
+
+  include if exists <local/aosp-nsjail>
+}
