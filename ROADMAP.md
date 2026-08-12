@@ -39,6 +39,8 @@ Both runs used identical locked manifests and product-image checksum sets, passe
 
 ## M4 — Quick Settings foundation
 
+**Status:** In progress. The first semantic shape-token slice is implemented and validated at AOSP commit `7a6ec03afcd8`. Focused tests passed 41/41, and identical-input runtime evidence is recorded at `/home/azureuser/android-test-artifacts/cuttlefish-20260812T071022Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T071420Z`. Remaining visual and configuration work will be validated in coherent batches rather than rebuilding after each token.
+
 **Deliverables:** Android 17 code inventory, semantic token matrix, representative tile states, screenshot baselines, accessibility and behavior checks.
 
 **Exit:** inactive/active/unavailable states remain semantically correct across light/dark/dynamic/contrast themes; no regression in gestures, long-press, connectivity, TalkBack, 48 dp targets, RTL, or lockscreen privacy.

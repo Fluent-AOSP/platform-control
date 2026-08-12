@@ -33,6 +33,23 @@ The patch uses `filepath.Rel` plus an explicit containment check, preserving the
 intended exclusion of host files for both relative and absolute output roots.
 It adds focused tests for product files, host files, and sibling directories.
 
+## Quick Settings semantic shape tokens
+
+`0003-frameworks-base-quick-settings-shape-tokens.patch` applies to project
+`frameworks/base` at locked revision
+`94b4c163b7dfe5ce3607f7bb8456f9573f7de57d`.
+
+The patch introduces component-semantic Quick Settings shape dimensions for
+active/inactive icon wells and tile surfaces, keeps the existing shared resource
+names as aliases, and preserves the tooltip's original geometry with a dedicated
+token. Compact tiles move from pill/circle treatment to rounded rectangles;
+large/desktop qualified values receive the same hierarchy. Dynamic colors,
+tile state mapping, typography, touch-target dimensions, clicks, long-clicks,
+and accessibility behavior are unchanged. Focused tests enforce alias identity,
+state distinction, and compact minimum touch targets. Applying the patch produces
+local commit `7a6ec03afcd84148e966a65eba74330967d012f2`; the patch SHA-256 is
+`923c7e0afbb8d68bc52868c7479fc07de666d28a40aef9571e5153633533f200`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -41,6 +58,10 @@ test "$(git rev-parse HEAD)" = 6722dd8833db7482df1a2543ca3fcf67ddf0f7b1
 git am /home/azureuser/fluent-aosp/patches/0001-build-soong-siso-external-out-dir.patch
 git am /home/azureuser/fluent-aosp/patches/0002-build-soong-ci-tests-external-out-dir.patch
 ../../prebuilts/go/linux-x86/bin/go test ./ui/build ./ci_tests
+
+cd /mnt/aosp/frameworks/base
+test "$(git rev-parse HEAD)" = 94b4c163b7dfe5ce3607f7bb8456f9573f7de57d
+git am /home/azureuser/fluent-aosp/patches/0003-frameworks-base-quick-settings-shape-tokens.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's

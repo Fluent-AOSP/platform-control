@@ -1,0 +1,189 @@
+From 7a6ec03afcd84148e966a65eba74330967d012f2 Mon Sep 17 00:00:00 2001
+From: Foxtrot47 <jjneutron@outlook.com>
+Date: Wed, 12 Aug 2026 06:53:00 +0000
+Subject: [PATCH] Add semantic Quick Settings shape tokens
+
+Change-Id: Ia63e2de3ee56e9ea0b14cd659b90ae1031c2a12f
+---
+ .../res/values-sw600dp/shade_dimens.xml       | 23 +++++-
+ packages/SystemUI/res/values/shade_dimens.xml | 14 +++-
+ .../systemui/qs/panels/ui/compose/Tooltip.kt  |  2 +-
+ .../ui/compose/QuickSettingsTokenTest.kt      | 82 +++++++++++++++++++
+ 4 files changed, 112 insertions(+), 9 deletions(-)
+ create mode 100644 packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+
+diff --git a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+index b2ab18589a8f..64275f661864 100644
+--- a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
++++ b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+@@ -26,20 +26,35 @@
+ 
+     <!-- QS shade overlay common tiles -->
+     <dimen
+-        name="common_tile_default_active_icon_corner_radius"
++        name="qs_shape_icon_active_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">10dp</dimen>
++    <dimen
++        name="qs_shape_icon_inactive_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">14dp</dimen>
++    <dimen
++        name="qs_shape_tile_active_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">14dp</dimen>
++    <dimen
++        name="qs_shape_tile_inactive_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">18dp</dimen>
++    <dimen
++        name="qs_tooltip_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
++    <dimen
++        name="common_tile_default_active_icon_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_icon_active_corner_radius</dimen>
+     <dimen
+         name="common_tile_default_active_tile_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">18dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_tile_active_corner_radius</dimen>
+     <dimen
+         name="common_tile_default_icon_size"
+         android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
+     <dimen
+         name="common_tile_default_inactive_icon_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">22dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_icon_inactive_corner_radius</dimen>
+     <dimen
+         name="common_tile_default_inactive_tile_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">28dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_tile_inactive_corner_radius</dimen>
+     <dimen
+         name="common_tile_default_large_tile_icon_size"
+         android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
+diff --git a/packages/SystemUI/res/values/shade_dimens.xml b/packages/SystemUI/res/values/shade_dimens.xml
+index 01ba1d035c2a..ececccde3202 100644
+--- a/packages/SystemUI/res/values/shade_dimens.xml
++++ b/packages/SystemUI/res/values/shade_dimens.xml
+@@ -28,12 +28,18 @@
+     <dimen name="overlay_shade_panel_shape_radius">46dp</dimen>
+ 
+     <!-- QS shade overlay common tiles -->
+-    <dimen name="common_tile_default_active_icon_corner_radius">16dp</dimen>
+-    <dimen name="common_tile_default_active_tile_corner_radius">24dp</dimen>
++    <!-- Component-semantic shape tokens keep tile styling separate from state behavior. -->
++    <dimen name="qs_shape_icon_active_corner_radius">12dp</dimen>
++    <dimen name="qs_shape_icon_inactive_corner_radius">16dp</dimen>
++    <dimen name="qs_shape_tile_active_corner_radius">16dp</dimen>
++    <dimen name="qs_shape_tile_inactive_corner_radius">20dp</dimen>
++    <dimen name="qs_tooltip_corner_radius">16dp</dimen>
++    <dimen name="common_tile_default_active_icon_corner_radius">@dimen/qs_shape_icon_active_corner_radius</dimen>
++    <dimen name="common_tile_default_active_tile_corner_radius">@dimen/qs_shape_tile_active_corner_radius</dimen>
+     <dimen name="common_tile_default_dual_target_end_padding">8dp</dimen>
+     <dimen name="common_tile_default_icon_size">32dp</dimen>
+-    <dimen name="common_tile_default_inactive_icon_corner_radius">50dp</dimen>
+-    <dimen name="common_tile_default_inactive_tile_corner_radius">@dimen/common_tile_default_inactive_icon_corner_radius</dimen>
++    <dimen name="common_tile_default_inactive_icon_corner_radius">@dimen/qs_shape_icon_inactive_corner_radius</dimen>
++    <dimen name="common_tile_default_inactive_tile_corner_radius">@dimen/qs_shape_tile_inactive_corner_radius</dimen>
+     <dimen name="common_tile_default_large_tile_icon_size">28dp</dimen>
+     <dimen name="common_tile_default_start_padding">8dp</dimen>
+     <dimen name="common_tile_default_tile_height">72dp</dimen>
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/Tooltip.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/Tooltip.kt
+index fe997e4141d9..cf6e32eca9d7 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/Tooltip.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/Tooltip.kt
+@@ -77,7 +77,7 @@ fun Tooltip(
+                 caretShape = TooltipDefaults.caretShape(),
+                 shape =
+                     RoundedCornerShape(
+-                        dimensionResource(R.dimen.common_tile_default_active_icon_corner_radius)
++                        dimensionResource(R.dimen.qs_tooltip_corner_radius)
+                     ),
+                 containerColor = tertiaryColor,
+                 contentColor = onTertiaryColor,
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+new file mode 100644
+index 000000000000..112c56ee0307
+--- /dev/null
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+@@ -0,0 +1,82 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.qs.panels.ui.compose
++
++import android.util.TypedValue
++import androidx.annotation.DimenRes
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.filters.SmallTest
++import com.android.systemui.SysuiTestCase
++import com.android.systemui.res.R
++import com.google.common.truth.Truth.assertThat
++import org.junit.Assume.assumeTrue
++import org.junit.Test
++import org.junit.runner.RunWith
++
++@SmallTest
++@RunWith(AndroidJUnit4::class)
++class QuickSettingsTokenTest : SysuiTestCase() {
++    @Test
++    fun commonTileShapes_referenceSemanticQuickSettingsTokens() {
++        assertDimensionAlias(
++            R.dimen.common_tile_default_active_icon_corner_radius,
++            R.dimen.qs_shape_icon_active_corner_radius,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_inactive_icon_corner_radius,
++            R.dimen.qs_shape_icon_inactive_corner_radius,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_active_tile_corner_radius,
++            R.dimen.qs_shape_tile_active_corner_radius,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_inactive_tile_corner_radius,
++            R.dimen.qs_shape_tile_inactive_corner_radius,
++        )
++    }
++
++    @Test
++    fun semanticShapes_keepSubtleStateDistinction() {
++        assertThat(dimension(R.dimen.qs_shape_icon_active_corner_radius))
++            .isLessThan(dimension(R.dimen.qs_shape_icon_inactive_corner_radius))
++        assertThat(dimension(R.dimen.qs_shape_tile_active_corner_radius))
++            .isLessThan(dimension(R.dimen.qs_shape_tile_inactive_corner_radius))
++    }
++
++    @Test
++    fun compactTiles_preserveMinimumTouchTargets() {
++        assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
++        val minimumTouchTarget = 48 * context.resources.displayMetrics.density
++
++        assertThat(dimension(R.dimen.common_tile_default_tile_height))
++            .isAtLeast(minimumTouchTarget)
++        assertThat(dimension(R.dimen.common_tile_default_toggle_target_size))
++            .isAtLeast(minimumTouchTarget)
++    }
++
++    private fun assertDimensionAlias(@DimenRes consumer: Int, @DimenRes token: Int) {
++        val unresolvedValue = TypedValue()
++        context.resources.getValue(consumer, unresolvedValue, false)
++
++        assertThat(unresolvedValue.type).isEqualTo(TypedValue.TYPE_REFERENCE)
++        assertThat(unresolvedValue.data).isEqualTo(token)
++        assertThat(dimension(consumer)).isEqualTo(dimension(token))
++    }
++
++    private fun dimension(@DimenRes resource: Int): Float = context.resources.getDimension(resource)
++}
+-- 
+2.53.0
+
