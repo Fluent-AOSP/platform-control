@@ -30,6 +30,7 @@ Environment:
   BUGREPORT_TIMEOUT  Default: 300 seconds
   STOP_TIMEOUT       Default: 60 seconds
   COLLECT_BUGREPORT  0 disables bugreport collection (default: 1)
+  CVD_GPU_MODE       Default: gfxstream_guest_angle_host_swiftshader
   TARGET_PACKAGES    CSV; default: com.android.systemui,com.android.settings
   FIRST_FEEDBACK_MARKER  Default: ~/.local/state/fluent-aosp/first-cuttlefish-feedback.sent
 
@@ -63,6 +64,7 @@ CVD_LAUNCH_TIMEOUT=${CVD_LAUNCH_TIMEOUT:-180}
 BUGREPORT_TIMEOUT=${BUGREPORT_TIMEOUT:-300}
 STOP_TIMEOUT=${STOP_TIMEOUT:-60}
 COLLECT_BUGREPORT=${COLLECT_BUGREPORT:-1}
+CVD_GPU_MODE=${CVD_GPU_MODE:-gfxstream_guest_angle_host_swiftshader}
 TARGET_PACKAGES=${TARGET_PACKAGES:-com.android.systemui,com.android.settings}
 FIRST_FEEDBACK_MARKER=${FIRST_FEEDBACK_MARKER:-${XDG_STATE_HOME:-$HOME/.local/state}/fluent-aosp/first-cuttlefish-feedback.sent}
 
@@ -72,6 +74,10 @@ for item in "INSTANCE_NUM:$INSTANCE_NUM" "ADB_TIMEOUT:$ADB_TIMEOUT" "BOOT_TIMEOU
   require_positive_integer "${item%%:*}" "${item#*:}"
 done
 [[ "$COLLECT_BUGREPORT" == 0 || "$COLLECT_BUGREPORT" == 1 ]] || die 'COLLECT_BUGREPORT must be 0 or 1'
+case "$CVD_GPU_MODE" in
+  auto|custom|drm_virgl|gfxstream|gfxstream_guest_angle|gfxstream_guest_angle_host_swiftshader|gfxstream_guest_angle_host_lavapipe|guest_swiftshader) ;;
+  *) die 'CVD_GPU_MODE is not a supported same-build Cuttlefish GPU mode' ;;
+esac
 [[ "$ALLOW_LUNCH_TARGET_OVERRIDE" == 0 || "$ALLOW_LUNCH_TARGET_OVERRIDE" == 1 ]] || die 'ALLOW_LUNCH_TARGET_OVERRIDE must be 0 or 1'
 if [[ "$LUNCH_TARGET" != "$APPROVED_LUNCH_TARGET" ]]; then
   [[ "$ALLOW_LUNCH_TARGET_OVERRIDE" == 1 ]] || die "LUNCH_TARGET must be $APPROVED_LUNCH_TARGET"
@@ -88,7 +94,7 @@ if [[ "$DRY_RUN" == 1 ]]; then
   printf 'DRY-RUN: require %q to resolve to physical output %q\n' "$AOSP_ROOT/$AOSP_OUT_ALIAS" "$OUT_DIR"
   printf 'DRY-RUN: source %q; lunch %q with OUT_DIR=%q\n' "$AOSP_ROOT/build/envsetup.sh" "$LUNCH_TARGET" "$AOSP_OUT_ALIAS"
   printf 'DRY-RUN: require same-build ANDROID_PRODUCT_OUT images and ANDROID_HOST_OUT/bin/launch_cvd\n'
-  printf 'DRY-RUN: acquire instance lock; launch with unique HOME, --daemon, --report_anonymous_usage_stats=n'
+  printf 'DRY-RUN: acquire instance lock; launch with unique HOME, --daemon, --report_anonymous_usage_stats=n, --gpu_mode=%q' "$CVD_GPU_MODE"
   [[ "$INSTANCE_NUM" == 1 ]] || printf ', --base_instance_num=%q' "$INSTANCE_NUM"
   printf '\nDRY-RUN: connect/wait only for adb serial %q; capture/validate evidence; stop through same-build tool and unique HOME\n' "$ANDROID_SERIAL"
   exit 0
@@ -249,6 +255,7 @@ repo manifest -r -o "$run_dir/source-manifest.xml"
   printf 'instance_num=%s\n' "$INSTANCE_NUM"
   printf 'serial=%s\n' "$ANDROID_SERIAL"
   printf 'launch_cvd_sha256=%s\n' "$(sha256sum "$launch_cvd_bin" | awk '{print $1}')"
+  printf 'gpu_mode=%s\n' "$CVD_GPU_MODE"
 } >"$run_dir/build-provenance.txt"
 find "$ANDROID_PRODUCT_OUT" -maxdepth 1 -type f -name '*.img' -print0 \
   | sort -z | xargs -0 -r sha256sum >"$run_dir/product-image-checksums.sha256"
@@ -259,7 +266,7 @@ if "$adb_bin" devices | awk -v suffix=":$expected_adb_port" '$1 ~ (suffix "$") {
 fi
 cuttlefish_port_is_free || die "Cuttlefish ADB port is already in use: $expected_adb_port"
 
-launch_args=(--daemon --report_anonymous_usage_stats=n)
+launch_args=(--daemon --report_anonymous_usage_stats=n "--gpu_mode=$CVD_GPU_MODE")
 [[ "$INSTANCE_NUM" == 1 ]] || launch_args+=("--base_instance_num=$INSTANCE_NUM")
 # Mark ownership before launch so a partial/timed-out launch still gets a scoped stop attempt.
 launched=1

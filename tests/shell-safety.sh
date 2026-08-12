@@ -62,6 +62,10 @@ if INSTANCE_NUM=2 ANDROID_SERIAL=127.0.0.1:6520 scripts/cuttlefish-smoke.sh --dr
   printf 'Cuttlefish accepted a serial that does not match its instance\n' >&2
   exit 1
 fi
+if CVD_GPU_MODE=unreviewed scripts/cuttlefish-smoke.sh --dry-run >/dev/null 2>&1; then
+  printf 'Cuttlefish accepted an unsupported GPU mode\n' >&2
+  exit 1
+fi
 if LUNCH_TARGET=aosp_cf_x86_64_only_phone-aosp_current-userdebug-bad scripts/aosp-build.sh --dry-run >/dev/null 2>&1; then
   printf 'build accepted an unreviewed lunch target override\n' >&2
   exit 1
@@ -96,6 +100,7 @@ grep -Fq -- '--no-use-superproject' scripts/aosp-init-sync.sh
 grep -Fq 'display_size=' scripts/lib/common.sh
 grep -Fq 'package="com.android.systemui"' scripts/lib/common.sh
 grep -Fq 'socket.SO_REUSEADDR' scripts/cuttlefish-smoke.sh
+grep -Fq 'gfxstream_guest_angle_host_swiftshader' scripts/cuttlefish-smoke.sh
 grep -Fq 'owned Cuttlefish ADB transport remained registered after disconnect' scripts/cuttlefish-smoke.sh
 for signal_script in scripts/aosp-init-sync.sh scripts/aosp-build.sh; do
   grep -Fq "trap 'exit 130' INT" "$signal_script"

@@ -36,6 +36,7 @@ Provide a closed, deterministic-enough loop for booting Android, exercising UI, 
 
 - Lunch: `aosp_cf_x86_64_only_phone-aosp_current-userdebug`.
 - Host tools: use `$ANDROID_HOST_OUT/bin` from the same build that produced `$ANDROID_PRODUCT_OUT`; never let a stale downloaded host bundle win in `PATH`.
+- Graphics: pin `gfxstream_guest_angle_host_swiftshader` on this GPU-less Azure host. Android 17 Cuttlefish explicitly recommends this vetted host software renderer when hardware GLES/Vulkan is unavailable; auto-selected `guest_swiftshader` produced a captured 16-second SystemUI frame and input ANR. Record the mode in provenance and keep the crash/ANR gate strict.
 - Runtime home: unique to the run so stop/reset commands address only that run.
 - Serial: derived from the locked instance (`127.0.0.1:` plus `6520 + instance - 1`), checked for pre-existing listeners/transports, and verified against the generated owned Cuttlefish configuration after launch. Clean-stop probing permits rebinding stale `TIME_WAIT` tuples but remains blocked by an actual listener; cleanup disconnects and verifies both ADB aliases for only the prevalidated owned port.
 - Scope: acceptance runtime for every UI change.
