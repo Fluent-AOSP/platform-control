@@ -151,17 +151,38 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 out = pathlib.Path(sys.argv[2])
-for path in sorted(root.rglob("build.prop")):
+
+# Product builds emit the canonical device fingerprint directly. Prefer this
+# over partition-scoped build.prop keys such as ro.system.build.fingerprint.
+fingerprint_files = sorted(root.glob("build_fingerprint-*.txt"))
+for path in fingerprint_files:
     try:
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-            if line.startswith("ro.build.fingerprint="):
+        value = path.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        continue
+    if value:
+        out.write_text(value + "\n", encoding="utf-8")
+        raise SystemExit(0)
+
+property_keys = (
+    "ro.build.fingerprint=",
+    "ro.vendor.build.fingerprint=",
+    "ro.product.build.fingerprint=",
+    "ro.system.build.fingerprint=",
+)
+for path in sorted(root.glob("**/build.prop")):
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        continue
+    for key in property_keys:
+        for line in lines:
+            if line.startswith(key):
                 value = line.split("=", 1)[1].strip()
                 if value:
                     out.write_text(value + "\n", encoding="utf-8")
                     raise SystemExit(0)
-    except OSError:
-        continue
-raise SystemExit("ro.build.fingerprint was not found in product build.prop files")
+raise SystemExit("build fingerprint was not found in product outputs")
 PY
 printf 'completed_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$run_dir/provenance.txt"
 printf 'PASS\n' >"$run_dir/result.txt"
