@@ -207,7 +207,7 @@ collect_standard_evidence() {
 }
 
 capture_ui_smoke() {
-  local adb_bin=$1 serial=$2 run_dir=$3 display_size width height swipe_x swipe_start swipe_end attempt
+  local adb_bin=$1 serial=$2 run_dir=$3 display_size width height swipe_x swipe_start swipe_end attempt ui_ready=0
 
   adb_for "$adb_bin" "$serial" shell input keyevent KEYCODE_WAKEUP
   adb_for "$adb_bin" "$serial" shell wm dismiss-keyguard
@@ -233,39 +233,39 @@ capture_ui_smoke() {
   swipe_end=$((height * 4 / 5))
 
   # Keep the direct SystemUI request, then issue display-relative gestures too:
-  # some platform versions return success while ignoring the shell request.
-  adb_for "$adb_bin" "$serial" shell cmd statusbar expand-settings \
-    >"$run_dir/statusbar-command.txt" 2>&1 || true
-  adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
-  adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
-  sleep 3
-  adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/quick-settings.png"
-
+  # some boots temporarily return success while SystemUI ignores the request.
+  # The visual and semantic assertions, not command exit status, bound readiness.
+  : >"$run_dir/statusbar-command.txt"
   : >"$run_dir/uiautomator.txt"
   : >"$run_dir/adb-pull-ui.txt"
-  adb_for "$adb_bin" "$serial" shell rm -f /sdcard/window.xml >/dev/null 2>&1 || true
   for attempt in 1 2 3 4 5; do
+    printf 'attempt=%s\n' "$attempt" >>"$run_dir/statusbar-command.txt"
+    adb_for "$adb_bin" "$serial" shell cmd statusbar expand-settings \
+      >>"$run_dir/statusbar-command.txt" 2>&1 || true
+    adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
+    adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
+    sleep 3
+    adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/quick-settings.png"
+
+    rm -f -- "$run_dir/window.xml"
+    adb_for "$adb_bin" "$serial" shell rm -f /sdcard/window.xml >/dev/null 2>&1 || true
     printf 'attempt=%s\n' "$attempt" >>"$run_dir/uiautomator.txt"
     if adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/window.xml \
         >>"$run_dir/uiautomator.txt" 2>&1 \
         && adb_for "$adb_bin" "$serial" pull /sdcard/window.xml "$run_dir/window.xml" \
         >>"$run_dir/adb-pull-ui.txt" 2>&1 \
-        && [[ -s "$run_dir/window.xml" ]]; then
+        && [[ -s "$run_dir/window.xml" ]] \
+        && ! cmp -s "$run_dir/home.png" "$run_dir/quick-settings.png" \
+        && grep -Fq 'package="com.android.systemui"' "$run_dir/window.xml"; then
+      ui_ready=1
       break
     fi
+    printf 'attempt=%s did not produce verified SystemUI Quick Settings\n' "$attempt" \
+      >>"$run_dir/statusbar-command.txt"
     sleep 2
   done
-  [[ -s "$run_dir/window.xml" ]] || {
-    printf 'UI hierarchy was unavailable after five attempts\n' >"$run_dir/ui-state-validation.txt"
-    return 1
-  }
-  if cmp -s "$run_dir/home.png" "$run_dir/quick-settings.png"; then
-    printf 'Quick Settings screenshot is identical to the collapsed home screenshot\n' \
-      >"$run_dir/ui-state-validation.txt"
-    return 1
-  fi
-  if ! grep -Fq 'package="com.android.systemui"' "$run_dir/window.xml"; then
-    printf 'Quick Settings hierarchy does not contain com.android.systemui\n' \
+  if [[ "$ui_ready" != 1 ]]; then
+    printf 'Quick Settings visual and SystemUI hierarchy gates failed after five attempts\n' \
       >"$run_dir/ui-state-validation.txt"
     return 1
   fi
