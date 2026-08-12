@@ -4,8 +4,10 @@ This repository is the control plane for a UI-only Fluent Design adaptation of A
 
 ## Approved baseline
 
-- Upstream: AOSP `android17-release`.
-- Manifest ref observed during bring-up: `29ace668ae756c7b8917c57abb440f6518844b0c`.
+- Upstream: AOSP `android17-release` from Android Gitiles.
+- Upstream manifest ref observed during bring-up: `29ace668ae756c7b8917c57abb440f6518844b0c`.
+- Fluent manifest: `https://github.com/Fluent-AOSP/android`, branch `fluent-android17`, with builds pinned to exact project revisions.
+- Modified projects are independent `Fluent-AOSP` repositories rooted in exact recorded Android Gitiles tree snapshots; `aosp-mirror` is not used.
 - Product: `aosp_cf_x86_64_only_phone`.
 - Lunch target: `aosp_cf_x86_64_only_phone-aosp_current-userdebug`.
 - Primary built-image runtime: Cuttlefish.
@@ -18,7 +20,7 @@ This repository is the control plane for a UI-only Fluent Design adaptation of A
 
 Only UI design is in scope. Preserve Android behavior, accessibility, navigation, safety, telephony semantics, dynamic color contracts, and Settings information architecture. Fluent settings belong in their existing relevant categories; there must be no catch-all fork/OS-specific Settings menu.
 
-Quick Settings is the first customization surface. Settings and Dialer follow only after the built-image loop is stable.
+Quick Settings is the first customization surface. Its canonical composition is the Windows 11 flyout: a floating Acrylic panel, three compact tile columns with labels below the surfaces, independent brightness/volume rails, and a distinct footer. Settings and Dialer follow only after the built-image loop is stable.
 
 ## Established evidence
 

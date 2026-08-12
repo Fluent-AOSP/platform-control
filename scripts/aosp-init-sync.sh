@@ -10,21 +10,22 @@ usage() {
   cat <<'EOF'
 Usage: scripts/aosp-init-sync.sh [--dry-run] [--help]
 
-Verify the approved Android 17 manifest ref, initialize/sync AOSP, and export a
-revision-locked manifest. This never cleans an existing checkout.
+Verify the approved Fluent Android 17 manifest ref, initialize/sync the pinned
+AOSP and Fluent project repositories, and export a revision-locked manifest.
+This never cleans an existing checkout.
 
 Environment:
   AOSP_ROOT                    Source path (default: /mnt/aosp)
-  MANIFEST_URL                 Default: https://android.googlesource.com/platform/manifest
-  MANIFEST_BRANCH              Default: android17-release
-  EXPECTED_MANIFEST_REF        Default: 29ace668ae756c7b8917c57abb440f6518844b0c
+  MANIFEST_URL                 Default: https://github.com/Fluent-AOSP/android.git
+  MANIFEST_BRANCH              Default: fluent-android17
+  EXPECTED_MANIFEST_REF        Default: a391e134a002eb8eab9a09e3d3addd2dd72efd64
   REPO_REV                     Repo launcher ref (default: v2.54)
   SYNC_JOBS                    Network fetch jobs; default: 4
   CHECKOUT_JOBS                Local checkout jobs; default: 1
   SYNC_TIMEOUT                 Per-stage limit; default: 21600 seconds
   SYNC_ATTEMPTS                Bounded sync attempts; default: 4
   SYNC_RETRY_DELAY             Linear backoff base; default: 120 seconds
-  LOCK_FILE                    Default: manifests/aosp-android17.lock.xml in this repo
+  LOCK_FILE                    Default: manifests/fluent-android17.lock.xml in this repo
   ALLOW_MANIFEST_REF_ADVANCE  1 permits the named branch to differ from the observed ref
   ALLOW_MANIFEST_LOCK_UPDATE  1 permits replacing a different existing lock file
 
@@ -42,16 +43,16 @@ esac
 [[ $# -le 1 ]] || die 'too many arguments'
 
 AOSP_ROOT=${AOSP_ROOT:-/mnt/aosp}
-MANIFEST_URL=${MANIFEST_URL:-https://android.googlesource.com/platform/manifest}
-MANIFEST_BRANCH=${MANIFEST_BRANCH:-android17-release}
-EXPECTED_MANIFEST_REF=${EXPECTED_MANIFEST_REF:-29ace668ae756c7b8917c57abb440f6518844b0c}
+MANIFEST_URL=${MANIFEST_URL:-https://github.com/Fluent-AOSP/android.git}
+MANIFEST_BRANCH=${MANIFEST_BRANCH:-fluent-android17}
+EXPECTED_MANIFEST_REF=${EXPECTED_MANIFEST_REF:-a391e134a002eb8eab9a09e3d3addd2dd72efd64}
 REPO_REV=${REPO_REV:-v2.54}
 SYNC_JOBS=${SYNC_JOBS:-4}
 CHECKOUT_JOBS=${CHECKOUT_JOBS:-1}
 SYNC_TIMEOUT=${SYNC_TIMEOUT:-21600}
 SYNC_ATTEMPTS=${SYNC_ATTEMPTS:-4}
 SYNC_RETRY_DELAY=${SYNC_RETRY_DELAY:-120}
-LOCK_FILE=${LOCK_FILE:-$REPO_ROOT/manifests/aosp-android17.lock.xml}
+LOCK_FILE=${LOCK_FILE:-$REPO_ROOT/manifests/fluent-android17.lock.xml}
 ALLOW_MANIFEST_REF_ADVANCE=${ALLOW_MANIFEST_REF_ADVANCE:-0}
 ALLOW_MANIFEST_LOCK_UPDATE=${ALLOW_MANIFEST_LOCK_UPDATE:-0}
 
@@ -70,6 +71,7 @@ if [[ "$DRY_RUN" == 1 ]]; then
   printf 'DRY-RUN: (cd %q && ' "$AOSP_ROOT"
   printf '%q ' repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" --repo-rev "$REPO_REV" --no-clone-bundle --no-use-superproject
   printf ')\n'
+  printf 'DRY-RUN: require initialized manifest checkout HEAD to equal %q\n' "$EXPECTED_MANIFEST_REF"
   printf 'DRY-RUN: (cd %q && ' "$AOSP_ROOT"
   printf '%q ' timeout "$SYNC_TIMEOUT" repo sync --network-only --no-use-superproject -c --no-clone-bundle --optimized-fetch --prune --fail-fast -j "$SYNC_JOBS"
   printf ')\n'
@@ -126,6 +128,9 @@ fi
 (
   cd "$AOSP_ROOT"
   repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" --repo-rev "$REPO_REV" --no-clone-bundle --no-use-superproject
+  initialized_manifest_ref=$(git -C .repo/manifests rev-parse HEAD)
+  [[ "$initialized_manifest_ref" == "$EXPECTED_MANIFEST_REF" ]] \
+    || die "initialized manifest differs: expected $EXPECTED_MANIFEST_REF, got $initialized_manifest_ref"
   sync_status=1
   for (( sync_attempt = 1; sync_attempt <= SYNC_ATTEMPTS; sync_attempt++ )); do
     log "AOSP network sync attempt $sync_attempt/$SYNC_ATTEMPTS (jobs=$SYNC_JOBS)"

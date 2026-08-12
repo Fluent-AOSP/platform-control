@@ -14,7 +14,7 @@ A control and documentation repository for bringing a cohesive Microsoft Fluent 
 | Bootstrap/fallback | SDK Emulator, API 36 `default;x86_64` |
 | Source / output | `/mnt/aosp` / `/home/azureuser/aosp-out` |
 
-The branch is a human-readable starting point, not a reproducibility guarantee. After sync, export and review a revision-locked manifest. See [ADR 0001](docs/adr/0001-aosp-baseline.md).
+The branch is a human-readable starting point, not a reproducibility guarantee. Builds use the exact revisions in the Fluent manifest and exported lock. See [ADR 0001](docs/adr/0001-aosp-baseline.md) and [ADR 0002](docs/adr/0002-project-repositories.md).
 
 ## Design stance
 
@@ -37,7 +37,8 @@ Read the [Fluent versus Material guide](docs/design/fluent-material-guide.md) an
 - `docs/test-loop.md` — unattended evidence-loop specification.
 - `docs/telegram-notifications.md` — private, low-noise feedback-channel setup and policy.
 - `scripts/` — strict, parameterized operational entry points.
-- `manifests/` — reviewed revision-locked Repo manifests.
+- `manifests/` — reviewed upstream and Fluent revision-locked Repo manifests.
+- `docs/adr/0002-project-repositories.md` — independent modified-project repository and manifest policy.
 
 ## Quick start
 
@@ -56,8 +57,7 @@ make smoke-cvd-dry-run
 Real operations are explicit:
 
 ```bash
-make init-sync        # network/disk intensive; initializes and syncs /mnt/aosp
-# Apply documented compatibility patches from patches/README.md after a fresh sync.
+make init-sync        # syncs the pinned Fluent manifest into /mnt/aosp
 make build            # builds via /mnt/aosp/out-fluent into /home/azureuser/aosp-out
 make smoke-sdk        # resets the dedicated bootstrap AVD and collects evidence
 make smoke-cvd        # boots locally built images and collects evidence
@@ -103,4 +103,4 @@ No script pushes or publishes. Only the explicit Telegram setup/notifier and doc
 
 ## Status
 
-M0–M3 are complete: the upstream AOSP checkout is revision-locked, the local product builds reproducibly through documented compatibility patches, and the same-build Cuttlefish evidence loop is stable. M4 has produced a validated Windows 11-aligned Quick Settings composition through local AOSP commit `b8d800b4bae9`, including scoped Windows-blue roles, cool Acrylic-like control and panel layers, runtime opaque no-blur fallbacks, and a thin Windows-like brightness control with its Android 48 dp interaction contract intact. See [ROADMAP.md](ROADMAP.md), the [Quick Settings foundation](docs/design/quick-settings-foundation.md), and [`patches/`](patches/README.md).
+M0–M3 are complete: the source tree is revision-locked, the product builds reproducibly, and the same-build Cuttlefish evidence loop is stable. Modified projects now live in independent `Fluent-AOSP` repositories selected by the pinned [`Fluent-AOSP/android`](https://github.com/Fluent-AOSP/android) manifest rather than an ordered patch queue. M4 currently publishes SystemUI work through [`platform_frameworks_base`](https://github.com/Fluent-AOSP/platform_frameworks_base) commit `e40e612abb23`; the next visual pass will realign Quick Settings structure with the supplied Windows 11 flyout reference, not merely its colors. See [ROADMAP.md](ROADMAP.md) and the [Quick Settings foundation](docs/design/quick-settings-foundation.md).

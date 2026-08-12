@@ -15,7 +15,7 @@ Candidates were AOSP, LineageOS, and PC-focused Android-x86/Bliss derivatives. A
 2. Verify the branch ref before the initial sync. The bring-up observation is `29ace668ae756c7b8917c57abb440f6518844b0c`; advancement requires an explicit override and review.
 3. Build `aosp_cf_x86_64_only_phone-aosp_current-userdebug`.
 4. Use Cuttlefish for locally built platform images and the classic SDK Emulator only as bootstrap/fallback.
-5. Immediately after a successful sync, export `repo manifest -r` to `manifests/aosp-android17.lock.xml`. Treat changes to that file as dependency updates requiring review.
+5. Preserve the initial upstream export as `manifests/aosp-android17.lock.xml`; export the active fork to `manifests/fluent-android17.lock.xml`. Treat changes to either source lock as dependency updates requiring review. ADR 0002 defines modified-project publication.
 6. Record the manifest lock, Repo launcher version, host-package versions, build target, host image, build fingerprint, and image hashes with each accepted build.
 
 A named branch improves intent but is still mutable. The revision-locked manifest is the source-input record; it does not promise bit-for-bit reproducible output by itself.
@@ -24,7 +24,7 @@ A named branch improves intent but is still mutable. The revision-locked manifes
 
 - It is the shortest path to `frameworks/base/packages/SystemUI/`, `packages/apps/Settings/`, and `packages/apps/Dialer/` without downstream framework/UI divergence.
 - Cuttlefish and the selected product are first-party AOSP development paths.
-- UI-only changes can prefer runtime resource overlays/product resources and small source patches.
+- UI-only changes can prefer runtime resource overlays/product resources and narrow source commits in the affected project repository.
 - It avoids inheriting unrelated product customization frameworks and merge burden.
 
 ## Alternatives
@@ -49,7 +49,7 @@ Rejected because their PC/bare-metal and desktop-windowing goals add divergence 
 
 - Initial sync/build remains large and long-running.
 - Upstream branch updates and lock-file updates are deliberate operations.
-- Direct source patches must be narrow, documented, and paired with screenshot/behavior tests.
+- Direct source commits must be narrow, documented, and paired with screenshot/behavior tests.
 - AOSP is not uniformly Apache-2.0; redistribution requires per-component notices, GPL obligations, and separate Google application/trademark review.
 - Cuttlefish UI availability does not establish real carrier/IMS telephony behavior.
 
@@ -59,7 +59,7 @@ Rejected because their PC/bare-metal and desktop-windowing goals add divergence 
 2. Fetch the named release branch and review its manifest delta.
 3. Sync the candidate, export a new revision lock to a temporary file, and review every changed project revision.
 4. Build and run the full closed loop.
-5. Commit the lock update with compatibility notes. Never update the lock as an incidental side effect of a UI patch.
+5. Commit the lock update with compatibility notes. Never update the lock as an incidental side effect of an unrelated UI commit.
 
 ## Official references
 

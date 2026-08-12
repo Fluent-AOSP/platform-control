@@ -6,6 +6,22 @@ M4 starts at the shared Android 17 Compose renderer. The first three batches est
 
 Windows 11 Quick Settings is the canonical visual reference. The Android implementation should be recognizably similar as a complete system—compact control geometry, flat split controls, restrained strokes, dense spacing, overlay materials, typography proportions, and motion—while retaining Android gestures, state production, security, accessibility, and adaptive layout.
 
+## Canonical flyout composition
+
+The supplied Windows 11 reference at `https://www.pasteboard.co/xiyHrUnntRgT.png` corrects the earlier overemphasis on isolated colors and corner tokens. The resolved 466×560 PNG has SHA-256 `abdf6956b72f6a4a19c461b9cc648b0a6f7d9b1d80b07ed887748eeacddf18e1`; a verification copy is retained outside Git at `/home/azureuser/android-test-artifacts/design-references/windows11-quick-settings-xiyHrUnntRgT.png`. The third-party image is not redistributed in the public repository pending licensing review. The current Android result is technically validated but is not visually accepted as a faithful Fluent composition.
+
+The reference establishes these non-negotiable structural relationships:
+
+- One floating, dark Acrylic-like flyout with a distinct footer band, rather than a collection of large Android cards filling the entire shade.
+- The canonical initial visible arrangement shows six controls in a three-column by two-row grid. Each control has a compact rectangular icon surface with its text label below the surface, not inside a wide two-column tile. Android's arbitrary user-configured tile set, paging, ordering, and edit operations remain supported beyond that initial viewport.
+- Bright cyan active surfaces with dark content; inactive surfaces are quiet charcoal layers with light content and restrained borders.
+- Optional chevrons are compact trailing affordances inside split controls such as Wi-Fi and Accessibility.
+- Brightness and volume are independent horizontal rail rows: leading icon, thin cyan/neutral track, compact circular thumb, and an optional trailing disclosure affordance. The red rectangle in the supplied image is an annotation around brightness, not part of the Windows UI.
+- Battery status sits at the left of the footer while edit and settings actions sit at the right. The footer is separated from the control body by material and tone, not by oversized standalone Android buttons.
+- System clock and status information remain outside the flyout. On Android they may remain in the platform-owned shade header, but must not dominate or visually merge with the Fluent control panel.
+
+On the 360 dp reference phone width, the Android translation should target roughly 16 dp panel padding, 8–12 dp column gaps, three approximately 100 dp tile columns, 56–60 dp visible tile surfaces, and 48 dp minimum interaction bounds. Labels may wrap or ellipsize according to Android locale and font-scale rules. Android continues to own tile state, long press, editing, brightness semantics, insets, lockscreen privacy, and accessibility.
+
 ## Android 17 implementation inventory
 
 | Surface | Primary implementation |
@@ -66,9 +82,9 @@ Normal tiles and resize-mode edit tiles share the new content-spacing token. Int
 
 The brightness focus outline now uses the same corner token and horizontal/vertical frame expansion as the background it surrounds. Toolbar button hit targets, semantics, and click behavior remain unchanged. Compact and `sw600dp` values use parallel feature-flag-qualified aliases.
 
-### Fourth implementation batch: Windows 11 alignment
+### Fourth implementation batch: initial Windows alignment (visually superseded)
 
-This batch supersedes the earlier exploratory radii while retaining their semantic resource seams.
+This batch superseded the earlier exploratory radii while retaining their semantic resource seams. Later comparison with the canonical flyout reference showed that it changed tokens without sufficiently changing the Material/Android composition; it remains historical implementation evidence, not the final visual target.
 
 | Surface/token | Previous compact | Windows-aligned target | Contract |
 |---|---:|---:|---|
@@ -142,7 +158,7 @@ The expanded shape-plus-chrome reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T093416Z`
 - Image SHA-256: `b1b7ca5b2821627bb0b22d8f3dbd816a22ecf6011cbf8dfafbb5313e40d85a3a`
 
-The final Windows 11-aligned expanded reference is tracked at:
+The intermediate Windows-token expanded reference is tracked at:
 
 - `docs/baselines/quick-settings/android17-windows11-fluent-expanded.png`
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`
@@ -154,7 +170,7 @@ The Windows-blue and control-layer reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T115229Z`
 - Image SHA-256: `3b273040401055db41cac29b0d57d8abd048656ab1f966c54265fd1185c3dc67`
 
-The current Acrylic-like panel and thin-brightness reference is tracked at:
+The latest technically accepted, but visually superseded, panel and thin-brightness reference is tracked at:
 
 - `docs/baselines/quick-settings/android17-windows11-fluent-panel-brightness-expanded.png`
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153553Z`
@@ -173,10 +189,10 @@ The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and una
 
 ## First-slice validation
 
-- AOSP commit: `7a6ec03afcd84148e966a65eba74330967d012f2`
-- Locked parent: `94b4c163b7dfe5ce3607f7bb8456f9573f7de57d`
-- Exported patch: `patches/0003-frameworks-base-quick-settings-shape-tokens.patch`
-- Patch SHA-256: `923c7e0afbb8d68bc52868c7479fc07de666d28a40aef9571e5153633533f200`
+- Historical local commit: `7a6ec03afcd84148e966a65eba74330967d012f2`
+- Published source commit: `2d914f3d467f371987f7171805716ef78504d7dd`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
+- Snapshot upstream: `94b4c163b7dfe5ce3607f7bb8456f9573f7de57d`
 - Focused targets: `SystemUI` and `SystemUITests` passed.
 - On-device focused evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T070528Z`
 - Focused result: 41 passed, 0 failed across token, tile interaction, state, policy, and accessibility-role tests.
@@ -189,10 +205,10 @@ Both accepted runs passed the SystemUI hierarchy and screenshot gates, target cr
 
 ## Second-batch validation
 
-- AOSP commit: `a25ecd17bfee2711fc3194d396d4de6f225632df`
-- Parent: `7a6ec03afcd84148e966a65eba74330967d012f2`
-- Exported patch: `patches/0004-frameworks-base-quick-settings-layout-tokens.patch`
-- Patch SHA-256: `04eb5b21a2e0140e9c62c7acc11e5a138255e909bf9bf3c6e1380e81f6c6e41e`
+- Historical local commit: `a25ecd17bfee2711fc3194d396d4de6f225632df`
+- Historical parent: `7a6ec03afcd84148e966a65eba74330967d012f2`
+- Published source commit: `62ec7bd5e5da3b3df0af7de9e119ddd6a5a2c6b0`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
 - Focused evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T080219Z`
 - Focused result: 57 discovered, 48 passed, 9 upstream configuration assumptions, 0 failed. This includes token aliases and values, tile interaction, edit-mode operations, state/accessibility mapping, and overlay tests.
 - Incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T080649Z`
@@ -204,10 +220,10 @@ The first launch after product packaging normalized the generated `super.img` an
 
 ## Third-batch validation
 
-- AOSP commit: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
-- Parent: `a25ecd17bfee2711fc3194d396d4de6f225632df`
-- Exported patch: `patches/0005-frameworks-base-quick-settings-chrome-shapes.patch`
-- Patch SHA-256: `af32d1bb42f434556740a0edced54f3bf460f74136954ff9a447c62c44ca7658`
+- Historical local commit: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
+- Historical parent: `a25ecd17bfee2711fc3194d396d4de6f225632df`
+- Published source commit: `b03b7af66051e6de8fb4c7cbeda8e13ade27bf3b`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
 - Focused evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T085703Z`
 - Focused result: 60 discovered, 50 passed, 10 configuration assumptions, 0 failed. One diagnostic wide-resource test was skipped because this product optimizes the desktop-sizing flag; it was removed before commit rather than retained as a non-executing test. The production code and remaining compact tests compiled in that run, and the final committed source compiled again in the product build.
 - Incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T091358Z`
@@ -222,10 +238,10 @@ The packaging launch again normalized only generated `super.img` and `userdata.i
 
 ## Fourth-batch validation
 
-- AOSP commit: `e2210836149cee234211a39dc44e866bf0219650`
-- Parent: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
-- Exported patch: `patches/0006-frameworks-base-windows11-fluent-quick-settings.patch`
-- Patch SHA-256: `f14cb09530e6fc750b4a8085fca301686815d007532528dac0423bc813499d27`
+- Historical local commit: `e2210836149cee234211a39dc44e866bf0219650`
+- Historical parent: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
+- Published source commit: `3efdf35cd4b7554905d10e7100f0d75a4ad98b09`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
 - Focused test evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T100601Z`
 - Focused result: 87 discovered, 78 passed, 9 upstream configuration assumptions, 0 failed. This covered compact/large tokens, shared tile behavior and accessibility, edit mode, and shade overlay composition.
 - Final corrected-source compile: `/home/azureuser/android-test-artifacts/systemui-fluent-final-build-20260812T103333Z` (`SystemUI` and `SystemUITests`, commit `e2210836149c`).
@@ -240,10 +256,10 @@ The first final-image launch exposed and corrected double-composited translucent
 
 ## Fifth-batch validation
 
-- AOSP commit: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
-- Parent: `e2210836149cee234211a39dc44e866bf0219650`
-- Exported patch: `patches/0007-frameworks-base-fluent-quick-settings-colors.patch`
-- Patch SHA-256: `e28b75330ed051ad3145c08ee1f4e126fd48082815ada1b807289f595719e8f2`
+- Historical local commit: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
+- Historical parent: `e2210836149cee234211a39dc44e866bf0219650`
+- Published source commit: `241dabaf81350d3912279c8424f64cec99e6b82f`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
 - Focused compile evidence: `/home/azureuser/android-test-artifacts/systemui-fluent-colors-build-20260812T112213Z`
 - Focused on-device evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T113734Z`
 - Focused result: 88 discovered, 79 passed, 9 upstream configuration assumptions, 0 failed.
@@ -258,10 +274,10 @@ Independent final review reported no blockers. The first post-build launch norma
 
 ## Sixth-batch validation
 
-- AOSP commit: `b8d800b4bae9c68907c1b4e3c12c4968af60ff1a`
-- Parent: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
-- Exported patch: `patches/0008-frameworks-base-fluent-panel-brightness.patch`
-- Patch SHA-256: `43fcdff9556f42848f2792b511fba73950714a9960034be1db1a0fd697ca0499`
+- Historical local commit: `b8d800b4bae9c68907c1b4e3c12c4968af60ff1a`
+- Historical parent: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
+- Published source commit: `e40e612abb235e0057ec06931b5650503adc4c1f`
+- Published repository: `https://github.com/Fluent-AOSP/platform_frameworks_base`
 - Final corrected-source compile: `/home/azureuser/android-test-artifacts/systemui-fluent-panel-slider-final-build-20260812T150755Z`
 - Focused on-device evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T152127Z`
 - Focused result: 93 discovered, 84 passed, 9 upstream configuration assumptions, 0 failed. The passing brightness test directly verifies the 48 dp Fluent slider target.

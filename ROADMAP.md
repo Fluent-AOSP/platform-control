@@ -22,7 +22,7 @@
 
 **Deliverables:** `aosp_cf_x86_64_only_phone-aosp_current-userdebug` images and same-build host tools; build log, manifest, fingerprints, and checksums.
 
-**Exit:** build succeeds from the locked manifest without undocumented source drift. Narrow local compatibility changes are allowed only as separate commits exported under `patches/`, with their identities captured in build evidence.
+**Exit:** build succeeds from the locked manifest without undocumented source drift. Modified projects are published as normal commits in independent `Fluent-AOSP` repositories and pinned by exact project commit IDs inside the separately pinned manifest.
 
 ## M3 — Locally built Cuttlefish loop
 
@@ -39,7 +39,7 @@ Both runs used identical locked manifests and product-image checksum sets, passe
 
 ## M4 — Quick Settings foundation
 
-**Status:** In progress. Windows 11-aligned composition, scoped color/material roles, an Acrylic-like panel layer, and a thin Windows-like brightness control are implemented through AOSP commit `b8d800b4bae9`. The latest focused cycle discovered 93 tests: 84 passed, 9 upstream configuration assumptions, and 0 failed; it directly verifies the 48 dp brightness interaction target. Product evidence is `/home/azureuser/android-test-artifacts/aosp-build-20260812T152556Z`; accepted byte-identical runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153201Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153553Z`. Runtime no-blur paths retain opaque panel roles. Remaining foundation work includes broader light/dark/high-contrast, reduced-transparency, RTL, font-scale, and large-screen runtime coverage.
+**Status:** In progress. Existing token, color, panel, and brightness work is published in `Fluent-AOSP/platform_frameworks_base` through commit `e40e612abb23`. Its latest focused cycle discovered 93 tests: 84 passed, 9 upstream configuration assumptions, and 0 failed; it directly verifies the 48 dp brightness interaction target. Product evidence is `/home/azureuser/android-test-artifacts/aosp-build-20260812T152556Z`; accepted byte-identical runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153201Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153553Z`. Subsequent visual review rejected the current composition as insufficiently correlated with the canonical Windows 11 flyout. The next batch must restructure the panel around three compact tile columns with labels below the tile surfaces, separate rail-style brightness/volume rows, a distinct footer, and a floating Acrylic hierarchy while preserving Android interaction and safety contracts. Broader light/dark/high-contrast, reduced-transparency, RTL, font-scale, and large-screen runtime coverage remains required.
 
 **Deliverables:** Android 17 code inventory, semantic token matrix, representative tile states, screenshot baselines, accessibility and behavior checks.
 
