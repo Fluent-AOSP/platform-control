@@ -179,7 +179,7 @@ stop_owned_cuttlefish() {
   # launch_cvd and the explicit connect can register both aliases. They were
   # proven absent before launch, so disconnect only this run's exact port.
   for owned_serial in "127.0.0.1:$expected_adb_port" "0.0.0.0:$expected_adb_port"; do
-    "$adb_bin" disconnect "$owned_serial" >>"$run_dir/cuttlefish-stop.txt" 2>&1 || stop_status=1
+    "$adb_bin" disconnect "$owned_serial" >>"$run_dir/cuttlefish-stop.txt" 2>&1 || true
   done
   if "$adb_bin" devices | awk -v suffix=":$expected_adb_port" \
       '$1 ~ (suffix "$") {found=1} END {exit !found}'; then

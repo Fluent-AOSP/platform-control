@@ -228,22 +228,23 @@ capture_ui_smoke() {
   width=${BASH_REMATCH[1]}
   height=${BASH_REMATCH[2]}
   swipe_x=$((width / 2))
-  swipe_start=$((height / 50))
-  (( swipe_start > 0 )) || swipe_start=1
+  # Status-bar interception requires the real top edge on current Android 17;
+  # a proportional inset can land below the gesture region on small displays.
+  swipe_start=1
   swipe_end=$((height * 4 / 5))
 
-  # Keep the direct SystemUI request, then issue display-relative gestures too:
-  # some boots temporarily return success while SystemUI ignores the request.
-  # The visual and semantic assertions, not command exit status, bound readiness.
+  # Android 17 can return success from `cmd statusbar expand-settings` without
+  # changing state. Drive the native top-edge gesture instead. The visual and
+  # semantic assertions, not input-command exit status, bound readiness.
   : >"$run_dir/statusbar-command.txt"
   : >"$run_dir/uiautomator.txt"
   : >"$run_dir/adb-pull-ui.txt"
   for attempt in 1 2 3 4 5; do
-    printf 'attempt=%s\n' "$attempt" >>"$run_dir/statusbar-command.txt"
-    adb_for "$adb_bin" "$serial" shell cmd statusbar expand-settings \
+    printf 'attempt=%s method=top-edge-swipe\n' "$attempt" >>"$run_dir/statusbar-command.txt"
+    adb_for "$adb_bin" "$serial" shell cmd statusbar collapse \
       >>"$run_dir/statusbar-command.txt" 2>&1 || true
-    adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
-    adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
+    sleep 1
+    adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 800
     sleep 3
     adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/quick-settings.png"
 
