@@ -1,0 +1,326 @@
+From 9f67040d68f04f1dec7c347134fc7a18a2a232a7 Mon Sep 17 00:00:00 2001
+From: Foxtrot47 <jjneutron@outlook.com>
+Date: Wed, 12 Aug 2026 09:13:41 +0000
+Subject: [PATCH] Add semantic Quick Settings chrome shapes
+
+Change-Id: I91e13b79bb00ab9d8ce6ea740bc3ac5c4379cb4a
+---
+ .../res/values-sw600dp/shade_dimens.xml       | 20 ++++++++++-
+ packages/SystemUI/res/values/shade_dimens.xml |  9 +++--
+ .../brightness/ui/compose/BrightnessSlider.kt |  4 ++-
+ .../ui/compose/infinitegrid/EditTile.kt       | 19 +++++-----
+ .../panels/ui/compose/toolbar/TextFeedback.kt |  9 +++--
+ .../qs/panels/ui/compose/toolbar/Toolbar.kt   | 10 +++++-
+ .../ui/compose/QuickSettingsTokenTest.kt      | 36 +++++++++++++++----
+ 7 files changed, 86 insertions(+), 21 deletions(-)
+
+diff --git a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+index 634d391a7864..275f41d9b073 100644
+--- a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
++++ b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+@@ -20,11 +20,20 @@
+         name="shade_panel_width"
+         android:featureFlag="com.android.systemui.desktop_sizing">376dp</dimen>
+ 
++    <dimen
++        name="qs_shape_panel_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
+     <dimen
+         name="overlay_shade_panel_shape_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">36dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_panel_corner_radius</dimen>
+ 
+     <!-- QS shade overlay common tiles -->
++    <dimen
++        name="qs_shape_brightness_container_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
++    <dimen
++        name="qs_shape_edit_grid_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">16dp</dimen>
+     <dimen
+         name="qs_shape_icon_active_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">10dp</dimen>
+@@ -37,6 +46,12 @@
+     <dimen
+         name="qs_shape_tile_inactive_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">18dp</dimen>
++    <dimen
++        name="qs_shape_toolbar_button_background_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
++    <dimen
++        name="qs_shape_toolbar_feedback_corner_radius"
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_size_tile_icon_only_icon"
+         android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
+@@ -111,6 +126,9 @@
+     <dimen
+         name="overlay_qs_layout_brightness_vertical_padding"
+         android:featureFlag="com.android.systemui.desktop_sizing">0dp</dimen>
++    <dimen
++        name="overlay_qs_layout_brightness_rounded_corner"
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_brightness_container_corner_radius</dimen>
+ 
+     <!-- QS shade overlay tool bar -->
+     <dimen
+diff --git a/packages/SystemUI/res/values/shade_dimens.xml b/packages/SystemUI/res/values/shade_dimens.xml
+index c5a85dbebea8..a8533f2340c1 100644
+--- a/packages/SystemUI/res/values/shade_dimens.xml
++++ b/packages/SystemUI/res/values/shade_dimens.xml
+@@ -25,14 +25,19 @@
+     -->
+     <dimen name="shade_panel_margin_horizontal">0dp</dimen>
+ 
+-    <dimen name="overlay_shade_panel_shape_radius">46dp</dimen>
++    <dimen name="qs_shape_panel_corner_radius">28dp</dimen>
++    <dimen name="overlay_shade_panel_shape_radius">@dimen/qs_shape_panel_corner_radius</dimen>
+ 
+     <!-- QS shade overlay common tiles -->
+     <!-- Component-semantic shape tokens keep tile styling separate from state behavior. -->
++    <dimen name="qs_shape_brightness_container_corner_radius">16dp</dimen>
++    <dimen name="qs_shape_edit_grid_corner_radius">20dp</dimen>
+     <dimen name="qs_shape_icon_active_corner_radius">12dp</dimen>
+     <dimen name="qs_shape_icon_inactive_corner_radius">16dp</dimen>
+     <dimen name="qs_shape_tile_active_corner_radius">16dp</dimen>
+     <dimen name="qs_shape_tile_inactive_corner_radius">20dp</dimen>
++    <dimen name="qs_shape_toolbar_button_background_corner_radius">10dp</dimen>
++    <dimen name="qs_shape_toolbar_feedback_corner_radius">10dp</dimen>
+     <dimen name="qs_size_tile_icon_only_icon">28dp</dimen>
+     <dimen name="qs_size_tile_labeled_icon">24dp</dimen>
+     <dimen name="qs_spacing_tile_content">8dp</dimen>
+@@ -59,7 +64,7 @@
+     <dimen name="overlay_qs_layout_brightness_thumb_width">4dp</dimen>
+     <dimen name="overlay_qs_layout_brightness_track_height">40dp</dimen>
+     <dimen name="overlay_qs_layout_brightness_vertical_padding">6dp</dimen>
+-    <dimen name="overlay_qs_layout_brightness_rounded_corner">24dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_rounded_corner">@dimen/qs_shape_brightness_container_corner_radius</dimen>
+     <dimen name="overlay_qs_layout_brightness_frame_width">10dp</dimen>
+     <dimen name="overlay_qs_layout_brightness_frame_height">6dp</dimen>
+     <dimen name="overlay_qs_layout_toolbar_height">48dp</dimen>
+diff --git a/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt b/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt
+index 04d48098263b..38f08344722b 100644
+--- a/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt
++++ b/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt
+@@ -418,7 +418,9 @@ fun BrightnessSliderContainer(
+             modifier =
+                 Modifier.borderOnFocus(
+                         color = MaterialTheme.colorScheme.secondary,
+-                        cornerSize = CornerSize(SliderTrackRoundedCorner),
++                        cornerSize = CornerSize(dimensions.backgroundRoundedCorner),
++                        paddingHorizontal = dimensions.backgroundFrameWidth,
++                        paddingVertical = dimensions.backgroundFrameHeight,
+                     )
+                     .then(if (viewModel.showMirror) Modifier.drawInOverlay() else Modifier)
+                     .sliderBackground(
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+index 7380da64d80e..f155cf678fb2 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+@@ -185,7 +185,6 @@ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaul
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AVAILABLE_TILES_GRID_ALPHA
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AvailableTilesGridMinHeight
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.CurrentTilesGridPadding
+-import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.GridBackgroundCornerRadius
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.TilePlacementSpec
+ import com.android.systemui.qs.panels.ui.compose.selection.InteractiveTileContainer
+ import com.android.systemui.qs.panels.ui.compose.selection.MutableSelectionState
+@@ -616,6 +615,8 @@ private fun CurrentTilesGrid(
+     val coroutineScope = rememberCoroutineScope()
+ 
+     val primaryColor = MaterialTheme.colorScheme.primary
++    val gridBackgroundCornerRadius =
++        dimensionResource(id = R.dimen.qs_shape_edit_grid_corner_radius)
+     TileLazyGrid(
+         state = gridState,
+         columns = GridCells.Fixed(listState.columns),
+@@ -626,7 +627,7 @@ private fun CurrentTilesGrid(
+                 .border(
+                     width = 2.dp,
+                     color = primaryColor,
+-                    shape = RoundedCornerShape(GridBackgroundCornerRadius),
++                    shape = RoundedCornerShape(gridBackgroundCornerRadius),
+                 )
+                 .dragAndDropTileList(gridState, { gridContentOffset }, listState) { spec ->
+                     onEditAction(EditAction.SetTiles(currentListState.tileSpecs()))
+@@ -638,7 +639,7 @@ private fun CurrentTilesGrid(
+                 .drawBehind {
+                     drawRoundRect(
+                         primaryColor,
+-                        cornerRadius = CornerRadius(GridBackgroundCornerRadius.toPx()),
++                        cornerRadius = CornerRadius(gridBackgroundCornerRadius.toPx()),
+                         alpha = .15f,
+                     )
+                 }
+@@ -764,6 +765,9 @@ private fun AvailableTileGrid(
+     // Map of TileSpec to EditTileViewModel to use with the grouped tilespecs
+     val viewModelsMap = remember(tiles) { tiles.associateBy { it.tileSpec } }
+ 
++    val gridBackgroundCornerRadius =
++        dimensionResource(id = R.dimen.qs_shape_edit_grid_corner_radius)
++
+     // Available tiles
+     Column(
+         verticalArrangement = spacedBy(2.dp),
+@@ -777,13 +781,13 @@ private fun AvailableTileGrid(
+                     when (index) {
+                         0 ->
+                             RoundedCornerShape(
+-                                topStart = GridBackgroundCornerRadius,
+-                                topEnd = GridBackgroundCornerRadius,
++                                topStart = gridBackgroundCornerRadius,
++                                topEnd = gridBackgroundCornerRadius,
+                             )
+                         groupedTileSpecs.size - 1 ->
+                             RoundedCornerShape(
+-                                bottomStart = GridBackgroundCornerRadius,
+-                                bottomEnd = GridBackgroundCornerRadius,
++                                bottomStart = gridBackgroundCornerRadius,
++                                bottomEnd = gridBackgroundCornerRadius,
+                             )
+                         else -> RectangleShape
+                     }
+@@ -1404,7 +1408,6 @@ private object EditModeTileDefaults {
+     const val AUTO_SELECT_DEBOUNCE_MILLIS = 100L
+     val CurrentTilesGridPadding = 10.dp
+     val AvailableTilesGridMinHeight = 200.dp
+-    val GridBackgroundCornerRadius = 28.dp
+     val TilePlacementSpec =
+         spring(
+             stiffness = Spring.StiffnessMediumLow,
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
+index 0552e31b5c89..fdcb46be5a59 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
+@@ -22,12 +22,13 @@ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.height
+ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.layout.size
+-import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.res.dimensionResource
+ import androidx.compose.ui.text.style.TextOverflow
+ import androidx.compose.ui.unit.dp
+ import com.android.compose.theme.LocalAndroidColorScheme
+@@ -35,6 +36,7 @@ import com.android.systemui.common.ui.compose.Icon
+ import com.android.systemui.compose.modifiers.sysuiResTag
+ import com.android.systemui.qs.panels.ui.compose.toolbar.TextFeedback.tag
+ import com.android.systemui.qs.panels.ui.viewmodel.TextFeedbackViewModel
++import com.android.systemui.res.R
+ 
+ @Composable
+ fun TextFeedback(viewModel: TextFeedbackViewModel, modifier: Modifier = Modifier) {
+@@ -47,7 +49,10 @@ fun TextFeedback(viewModel: TextFeedbackViewModel, modifier: Modifier = Modifier
+                     .tag()
+                     .background(
+                         color = LocalAndroidColorScheme.current.surfaceEffect2,
+-                        shape = CircleShape,
++                        shape =
++                            RoundedCornerShape(
++                                dimensionResource(R.dimen.qs_shape_toolbar_feedback_corner_radius)
++                            ),
+                     )
+                     .height(36.dp)
+                     .padding(horizontal = 8.dp),
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
+index fbf0df10d61d..dbf15f820fcd 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
+@@ -219,7 +219,10 @@ private fun IconButton(
+         Box(
+             modifier =
+                 Modifier.size(IconButtonDimensions.ColoredBackgroundSize)
+-                    .background(color = protectionColor, shape = CircleShape),
++                    .background(
++                        color = protectionColor,
++                        shape = RoundedCornerShape(IconButtonDimensions.BackgroundCornerRadius),
++                    ),
+             contentAlignment = Alignment.Center,
+         ) {
+             ToolbarIcon(
+@@ -351,6 +354,11 @@ private object PowerMenuToggleButtonConstants {
+ }
+ 
+ object IconButtonDimensions {
++    val BackgroundCornerRadius: Dp
++        @Composable
++        @ReadOnlyComposable
++        get() = dimensionResource(id = R.dimen.qs_shape_toolbar_button_background_corner_radius)
++
+     val ColoredBackgroundSize: Dp
+         @Composable
+         @ReadOnlyComposable
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+index 6b6c73ba699f..51a5bb1c3565 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+@@ -68,16 +68,25 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+             R.dimen.common_tile_default_start_padding,
+             R.dimen.qs_spacing_tile_start,
+         )
+-        assertDimensionAlias(
+-            R.dimen.common_tile_default_end_padding,
+-            R.dimen.qs_spacing_tile_end,
+-        )
++        assertDimensionAlias(R.dimen.common_tile_default_end_padding, R.dimen.qs_spacing_tile_end)
+         assertDimensionAlias(
+             R.dimen.common_tile_default_dual_target_end_padding,
+             R.dimen.qs_spacing_tile_dual_target_end,
+         )
+     }
+ 
++    @Test
++    fun quickSettingsChrome_referencesSemanticShapeTokens() {
++        assertDimensionAlias(
++            R.dimen.overlay_shade_panel_shape_radius,
++            R.dimen.qs_shape_panel_corner_radius,
++        )
++        assertDimensionAlias(
++            R.dimen.overlay_qs_layout_brightness_rounded_corner,
++            R.dimen.qs_shape_brightness_container_corner_radius,
++        )
++    }
++
+     @Test
+     fun semanticShapes_keepSubtleStateDistinction() {
+         assertThat(dimension(R.dimen.qs_shape_icon_active_corner_radius))
+@@ -98,6 +107,22 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+         assertThat(dimensionDp(R.dimen.qs_spacing_tile_dual_target_end)).isEqualTo(8f)
+     }
+ 
++    @Test
++    fun compactChrome_usesFoundationGeometry() {
++        assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
++
++        assertThat(dimensionDp(R.dimen.qs_shape_panel_corner_radius)).isEqualTo(28f)
++        assertThat(dimensionDp(R.dimen.qs_shape_brightness_container_corner_radius)).isEqualTo(16f)
++        assertThat(dimensionDp(R.dimen.qs_shape_edit_grid_corner_radius)).isEqualTo(20f)
++        assertThat(dimensionDp(R.dimen.qs_shape_toolbar_button_background_corner_radius))
++            .isEqualTo(10f)
++        assertThat(dimensionDp(R.dimen.qs_shape_toolbar_feedback_corner_radius)).isEqualTo(10f)
++        assertThat(dimension(R.dimen.qs_shape_brightness_container_corner_radius))
++            .isLessThan(dimension(R.dimen.overlay_qs_layout_brightness_track_height) / 2f)
++        assertThat(dimension(R.dimen.qs_shape_toolbar_button_background_corner_radius))
++            .isLessThan(dimension(R.dimen.toolbar_button_colored_background_size) / 2f)
++    }
++
+     @Test
+     fun compactTiles_preserveMinimumTouchTargets() {
+         assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
+@@ -105,8 +130,7 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+ 
+         assertThat(dimensionDp(R.dimen.common_tile_default_tile_height)).isEqualTo(72f)
+         assertThat(dimensionDp(R.dimen.common_tile_default_toggle_target_size)).isEqualTo(56f)
+-        assertThat(dimension(R.dimen.common_tile_default_tile_height))
+-            .isAtLeast(minimumTouchTarget)
++        assertThat(dimension(R.dimen.common_tile_default_tile_height)).isAtLeast(minimumTouchTarget)
+         assertThat(dimension(R.dimen.common_tile_default_toggle_target_size))
+             .isAtLeast(minimumTouchTarget)
+     }
+-- 
+2.53.0
+

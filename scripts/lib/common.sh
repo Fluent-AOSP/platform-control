@@ -207,7 +207,7 @@ collect_standard_evidence() {
 }
 
 capture_ui_smoke() {
-  local adb_bin=$1 serial=$2 run_dir=$3 display_size width height swipe_x swipe_start swipe_end attempt ui_ready=0
+  local adb_bin=$1 serial=$2 run_dir=$3 display_size width height swipe_x swipe_start swipe_end attempt ui_ready=0 expanded_ready=0
 
   adb_for "$adb_bin" "$serial" shell input keyevent KEYCODE_WAKEUP
   adb_for "$adb_bin" "$serial" shell wm dismiss-keyguard
@@ -270,13 +270,51 @@ capture_ui_smoke() {
       >"$run_dir/ui-state-validation.txt"
     return 1
   fi
-  printf 'PASS display=%sx%s swipe=%s,%s-%s,%s hierarchy=com.android.systemui\n' \
+
+  : >"$run_dir/expanded-uiautomator.txt"
+  : >"$run_dir/expanded-adb-pull-ui.txt"
+  for attempt in 1 2 3; do
+    printf 'expanded_attempt=%s method=top-edge-swipe\n' "$attempt" \
+      >>"$run_dir/statusbar-command.txt"
+    adb_for "$adb_bin" "$serial" shell input swipe \
+      "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 800
+    sleep 3
+    adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/quick-settings-expanded.png"
+
+    rm -f -- "$run_dir/expanded-window.xml"
+    adb_for "$adb_bin" "$serial" shell rm -f /sdcard/expanded-window.xml \
+      >/dev/null 2>&1 || true
+    printf 'attempt=%s\n' "$attempt" >>"$run_dir/expanded-uiautomator.txt"
+    if adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/expanded-window.xml \
+        >>"$run_dir/expanded-uiautomator.txt" 2>&1 \
+        && adb_for "$adb_bin" "$serial" pull /sdcard/expanded-window.xml \
+          "$run_dir/expanded-window.xml" >>"$run_dir/expanded-adb-pull-ui.txt" 2>&1 \
+        && [[ -s "$run_dir/expanded-window.xml" ]] \
+        && ! cmp -s "$run_dir/quick-settings.png" "$run_dir/quick-settings-expanded.png" \
+        && grep -Fq 'package="com.android.systemui"' "$run_dir/expanded-window.xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/brightness_slider"' \
+          "$run_dir/expanded-window.xml"; then
+      expanded_ready=1
+      break
+    fi
+    printf 'expanded_attempt=%s did not produce verified expanded Quick Settings\n' "$attempt" \
+      >>"$run_dir/statusbar-command.txt"
+    sleep 2
+  done
+  if [[ "$expanded_ready" != 1 ]]; then
+    printf 'Expanded Quick Settings visual and toolbar hierarchy gates failed after three attempts\n' \
+      >"$run_dir/ui-state-validation.txt"
+    return 1
+  fi
+
+  printf 'PASS display=%sx%s swipe=%s,%s-%s,%s hierarchy=com.android.systemui expanded=true\n' \
     "$width" "$height" "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" \
     >"$run_dir/ui-state-validation.txt"
 
   {
     validate_png "$run_dir/home.png"
     validate_png "$run_dir/quick-settings.png"
+    validate_png "$run_dir/quick-settings-expanded.png"
   } >"$run_dir/png-validation.txt"
 }
 

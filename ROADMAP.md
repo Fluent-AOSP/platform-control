@@ -39,7 +39,7 @@ Both runs used identical locked manifests and product-image checksum sets, passe
 
 ## M4 — Quick Settings foundation
 
-**Status:** In progress. Shape and layout token batches are implemented at AOSP commits `7a6ec03afcd8` and `a25ecd17bfee`. The latest focused suite discovered 57 tests with 48 passes, 9 upstream configuration assumptions, and 0 failures. Latest identical-input runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081409Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081829Z`. Remaining visual and configuration work will be accumulated into materially larger batches before rebuilding.
+**Status:** In progress. Shape, layout, and broader chrome batches are implemented through AOSP commit `9f67040d68f0`. The latest focused cycle compiled the batch and ran 60 tests with 50 passes, 10 configuration assumptions, and 0 failures; its one diagnostic desktop-flag skip was removed before commit because that flag is optimized on this product. Latest identical-input runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T092107Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T092512Z`; fully expanded Quick Settings evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T093416Z`. Remaining work continues in materially larger batches.
 
 **Deliverables:** Android 17 code inventory, semantic token matrix, representative tile states, screenshot baselines, accessibility and behavior checks.
 

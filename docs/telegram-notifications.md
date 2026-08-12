@@ -8,9 +8,10 @@ Telegram is the user-feedback channel for meaningful unattended milestones only:
 - AOSP image build success/failure;
 - SDK Emulator smoke success/failure;
 - locally built Cuttlefish verification success/failure;
-- the first verified Quick Settings screenshot and explicit feedback request.
+- the first verified Quick Settings screenshot and explicit feedback request;
+- one verified screenshot after each successful visible UI change batch.
 
-Do not send per-command progress, raw log streams, bugreports, tokens, environment dumps, or screenshots from personal/development devices. An automatic attachment is a raw Quick Settings screenshot—not redacted—from a new test-owned AOSP instance with no account or user data. The SDK loop attaches only after `WIPE_DATA=1`; the Cuttlefish loop attaches only its first passing locally built baseline.
+Do not send per-command progress, raw log streams, bugreports, tokens, environment dumps, or screenshots from personal/development devices. An attachment is a raw Quick Settings screenshot—not redacted—from a new test-owned AOSP instance with no account or user data. The SDK loop attaches only after `WIPE_DATA=1`; the Cuttlefish loop attaches its first passing locally built baseline automatically. For later UI batches, send one representative expanded screenshot only after final validation rather than attaching every member of the repeated runtime pair.
 
 ## Private-chat setup
 
@@ -75,7 +76,7 @@ Operational scripts call the notifier through `notify_telegram_safe`:
 - `NOTIFY_TELEGRAM=0`: suppress delivery for a run;
 - `NOTIFY_TELEGRAM=1`: request delivery and warn if configuration is missing or broken.
 
-Notification transport failure is recorded as a warning and never changes the primary sync/build/test result. Failure notifications include only the exit status and local evidence path. The first successfully delivered Cuttlefish feedback image creates `~/.local/state/fluent-aosp/first-cuttlefish-feedback.sent`; later passing runs send status text without an automatic image. Remove that marker deliberately to request a new baseline attachment. Raw bugreports are never attached. Setup-time read calls may retry transient failures; `sendMessage` and `sendPhoto` are not automatically retried because repeating a POST after a lost response can create duplicates.
+Notification transport failure is recorded as a warning and never changes the primary sync/build/test result. Failure notifications include only the exit status and local evidence path. The first successfully delivered Cuttlefish feedback image creates `~/.local/state/fluent-aosp/first-cuttlefish-feedback.sent`; later passing runs send status text without an automatic image. After a visible UI batch is fully accepted, its orchestrator sends one representative screenshot explicitly with `--photo`. Remove the marker deliberately only to request a new automatic baseline attachment. Raw bugreports are never attached. Setup-time read calls may retry transient failures; `sendMessage` and `sendPhoto` are not automatically retried because repeating a POST after a lost response can create duplicates.
 
 ## Rotation and removal
 

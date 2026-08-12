@@ -66,6 +66,21 @@ the patch produces local commit `a25ecd17bfee2711fc3194d396d4de6f225632df`;
 the patch SHA-256 is
 `04eb5b21a2e0140e9c62c7acc11e5a138255e909bf9bf3c6e1380e81f6c6e41e`.
 
+## Quick Settings semantic chrome shapes
+
+`0005-frameworks-base-quick-settings-chrome-shapes.patch` applies after patch
+0004, at local `frameworks/base` revision
+`a25ecd17bfee2711fc3194d396d4de6f225632df`.
+
+The patch adds compact and `sw600dp` semantic shape tokens for the shade panel,
+brightness container, edit-grid containers, toolbar protected background, and
+non-interactive toolbar feedback. It makes the brightness focus outline follow
+the same corner and frame expansion as its background. Slider behavior, dynamic
+colors, edit operations, toolbar interaction/focus shapes, clicks, semantics,
+and touch-target dimensions remain unchanged. Applying the patch produces local
+commit `9f67040d68f04f1dec7c347134fc7a18a2a232a7`; the patch SHA-256 is
+`af32d1bb42f434556740a0edced54f3bf460f74136954ff9a447c62c44ca7658`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -80,6 +95,8 @@ test "$(git rev-parse HEAD)" = 94b4c163b7dfe5ce3607f7bb8456f9573f7de57d
 git am /home/azureuser/fluent-aosp/patches/0003-frameworks-base-quick-settings-shape-tokens.patch
 test "$(git rev-parse HEAD)" = 7a6ec03afcd84148e966a65eba74330967d012f2
 git am /home/azureuser/fluent-aosp/patches/0004-frameworks-base-quick-settings-layout-tokens.patch
+test "$(git rev-parse HEAD)" = a25ecd17bfee2711fc3194d396d4de6f225632df
+git am /home/azureuser/fluent-aosp/patches/0005-frameworks-base-quick-settings-chrome-shapes.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's

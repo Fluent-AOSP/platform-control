@@ -2,7 +2,7 @@
 
 ## Scope
 
-M4 starts at the shared Android 17 Compose tile renderer. The first two changes are limited to shape and layout tokens. They do not change tile state production, color roles, icon assets, typography, layout count, touch targets, clicks, long-clicks, accessibility semantics, connectivity behavior, or lockscreen policy.
+M4 starts at the shared Android 17 Compose renderer. The first three batches establish semantic tile, layout, and chrome tokens. They do not change tile state production, color roles, icon assets, typography, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
 The design goal is a Fluent-inspired hierarchy adapted to Android: softly rounded rectangles with a subtle state-dependent radius change, not a literal WinUI surface and not fixed Windows colors.
 
@@ -16,6 +16,9 @@ The design goal is a Fluent-inspired hierarchy adapted to Android: softly rounde
 | Expanded grid | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/TileGrid.kt` |
 | Tile surface and state colors | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt` |
 | Shared tile content and dimensions | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt` |
+| Brightness container and focus outline | `frameworks/base/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt` |
+| Edit-grid chrome | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt` |
+| Toolbar chrome | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/` |
 | Platform-to-Compose state adapter | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/viewmodel/TileUiState.kt` |
 | Compact-phone dimensions | `frameworks/base/packages/SystemUI/res/values/shade_dimens.xml` |
 | Large/desktop dimensions | `frameworks/base/packages/SystemUI/res/values-sw600dp/shade_dimens.xml` |
@@ -49,6 +52,18 @@ Existing `common_tile_default_*` resources become aliases to new component-seman
 | Dual-target end padding | 8 dp | 8 dp | 8 dp | 8 dp | Semantic alias; no geometry change |
 
 Normal tiles and resize-mode edit tiles share the new content-spacing token. Inter-tile edit-grid spacing remains an independent 6 dp value, avoiding drag-geometry changes. Direct semantic icon resources replace the previous desktop runtime inversion while preserving its effective 24/20 dp result.
+
+### Third implementation batch
+
+| Semantic token | Compact upstream | Compact target | Large upstream | Large target | Intent |
+|---|---:|---:|---:|---:|---|
+| Shade panel radius | 46 dp | 28 dp | 36 dp | 24 dp | Reduce the oversized panel arc |
+| Brightness container radius | 24 dp | 16 dp | 24 dp inherited | 12 dp | Replace pill treatment while retaining the track and thumb |
+| Edit-grid container radius | 28 dp | 20 dp | 28 dp inherited | 16 dp | Bring current/available tile containers into the shared hierarchy |
+| Toolbar protected background radius | circle | 10 dp | circle | 8 dp | Rounded-square decorative protection without changing button interaction geometry |
+| Toolbar feedback radius | pill | 10 dp | pill | 8 dp | Align transient non-interactive feedback with compact chrome |
+
+The brightness focus outline now uses the same corner token and horizontal/vertical frame expansion as the background it surrounds. Toolbar button hit targets, circular interaction/focus shapes, semantics, and click behavior remain unchanged; only the inner protected visual background changes. Compact and `sw600dp` values use parallel feature-flag-qualified aliases.
 
 ### Preserved Android tokens
 
@@ -88,7 +103,13 @@ The shape-plus-layout reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081409Z`
 - Image SHA-256: `771699448567bc41c32e83f3474dfb5d165dea2767afc617eb7f778a33009a37`
 
-All images contain representative states in one test-owned frame: active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast. Their comparison shows the rounded-rectangle hierarchy and reduced glyph weight without changing the platform-owned state palette.
+The expanded shape-plus-chrome reference is tracked at:
+
+- `docs/baselines/quick-settings/android17-fluent-chrome-expanded.png`
+- Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T093416Z`
+- Image SHA-256: `b1b7ca5b2821627bb0b22d8f3dbd816a22ecf6011cbf8dfafbb5313e40d85a3a`
+
+The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded reference additionally proves the resource-backed brightness container and full Quick Settings hierarchy while retaining platform-owned state colors and controls.
 
 ## Validation contract
 
@@ -96,7 +117,7 @@ All images contain representative states in one test-owned frame: active Bluetoo
 2. Run the existing tile behavior and state/accessibility test classes.
 3. Rebuild product images incrementally.
 4. Run two clean Cuttlefish boots from the modified image.
-5. Require distinct home/Quick Settings images, a SystemUI hierarchy, clean target crash/ANR classification, complete evidence, graceful stop, and no lingering transport.
+5. Require distinct home, first-pull, and fully expanded Quick Settings images; SystemUI container and brightness-slider hierarchy markers; clean target crash/ANR classification; complete evidence; graceful stop; and no lingering transport.
 6. Compare the modified screenshot with the stock baseline and confirm all representative states remain distinguishable.
 
 ## First-slice validation
@@ -130,6 +151,24 @@ Both accepted runs passed the SystemUI hierarchy and screenshot gates, target cr
 
 The first launch after product packaging normalized the generated `super.img` and `userdata.img`; component partition images were unchanged. The accepted pair was captured after that one-time normalization and has identical source manifests and complete product-image checksum sets. Both runs passed all runtime, evidence, crash/ANR, and clean-stop gates.
 
+## Third-batch validation
+
+- AOSP commit: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
+- Parent: `a25ecd17bfee2711fc3194d396d4de6f225632df`
+- Exported patch: `patches/0005-frameworks-base-quick-settings-chrome-shapes.patch`
+- Patch SHA-256: `af32d1bb42f434556740a0edced54f3bf460f74136954ff9a447c62c44ca7658`
+- Focused evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T085703Z`
+- Focused result: 60 discovered, 50 passed, 10 configuration assumptions, 0 failed. One diagnostic wide-resource test was skipped because this product optimizes the desktop-sizing flag; it was removed before commit rather than retained as a non-executing test. The production code and remaining compact tests compiled in that run, and the final committed source compiled again in the product build.
+- Incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T091358Z`
+- Accepted identical-input Cuttlefish pair:
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T092107Z`
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T092512Z`
+- Accepted source-manifest SHA-256: `ee69d167f4878b883a12f048dc903646c371a5b626ef29de2264d92f91df9309`
+- Accepted product-checksum-list SHA-256: `347d3a275988425d78eb7e5242f6bf816954983ecce176b3a6a91b9c04729a4a`
+- Expanded-Quick-Settings gate evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T093416Z`
+
+The packaging launch again normalized only generated `super.img` and `userdata.img`; component partitions were unchanged. The accepted pair then used byte-identical source manifests and complete image checksum lists. Both pair members, plus the expanded-view gate run, passed UI, crash/ANR, bugreport, graceful-stop, and post-stop cleanliness checks.
+
 ## Batched follow-up work
 
-Further typography, brightness, toolbar/footer, detailed-view, motion, and configuration work will be grouped into materially larger coherent batches. Each batch uses one focused build/test cycle after editing, followed by one incremental product build and final runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.
+Further typography, header/footer spacing, detailed-view, motion, and configuration work will be grouped into materially larger coherent batches. Each batch uses one focused build/test cycle after editing, followed by one incremental product build and final runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.

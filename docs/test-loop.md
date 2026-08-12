@@ -15,7 +15,7 @@ Provide a closed, deterministic-enough loop for booting Android, exercising UI, 
 7. **Package-manager deadline** — require `cmd package list packages` to succeed.
 8. **Baseline** — record fingerprint, build ID, API, ABI, model, display, `adb devices -l`, manifest/tool provenance, and clear logcat.
 9. **Observe continuously** — start `logcat -b all -v threadtime` before UI actions.
-10. **Drive/assert** — wake, dismiss keyguard if allowed, go home, disable animations for deterministic smoke evidence, and expand Quick Settings with a native top-edge gesture whose horizontal/end coordinates use the live display dimensions. Android 17's `cmd statusbar expand-settings` can report success without changing state. Retry within a fixed attempt bound and require the Quick Settings image to differ from home and the hierarchy to identify SystemUI. Prefer instrumentation/UI Automator semantic assertions over coordinate taps for later tests.
+10. **Drive/assert** — wake, dismiss keyguard if allowed, go home, disable animations for deterministic smoke evidence, and expand Quick Settings with native top-edge gestures whose horizontal/end coordinates use the live display dimensions. Android 17's `cmd statusbar expand-settings` can report success without changing state. Retry within fixed attempt bounds; require the first-pull image to differ from home and identify SystemUI, then require a distinct fully expanded image whose hierarchy contains the brightness slider. Prefer instrumentation/UI Automator semantic assertions over coordinate taps for later tests.
 11. **Collect always** — screenshots, UI XML, logcat, dumpsys, exit info, and a bounded bugreport. Missing core evidence fails the run. A bugreport timeout or explicit disable is recorded as an allowed evidence exception; other bugreport failures fail.
 12. **Validate/classify** — structurally validate PNGs and scan for target-package Java/native crash and ANR evidence. Raw “FATAL” keyword matching is insufficient.
 13. **Stop** — stop only the owned AVD/instance. A bounded TERM/KILL fallback may clean an owned Emulator PID after failure, but an accepted run requires the graceful owned stop to succeed. Preserve evidence on every exit and write `PASS` only after stop.
@@ -64,8 +64,8 @@ Every accepted run should contain:
 - `result.txt` and stage/error context;
 - launch stdout/stderr and owned PID when available;
 - `provenance.txt`, `adb-devices.txt`, `getprop.txt`, display size/density;
-- `home.png`, `quick-settings.png`, and their validation output;
-- UI hierarchy XML and dump command output;
+- `home.png`, `quick-settings.png`, `quick-settings-expanded.png`, and their validation output;
+- first-pull and expanded UI hierarchy XML plus dump command output;
 - continuous all-buffer logcat plus event-focused crash/ANR scan;
 - `dumpsys activity`, window, and SurfaceFlinger snapshots;
 - bounded bugreport unless an explicit resource policy disables it;
