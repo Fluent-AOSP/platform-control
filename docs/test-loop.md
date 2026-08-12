@@ -15,7 +15,7 @@ Provide a closed, deterministic-enough loop for booting Android, exercising UI, 
 7. **Package-manager deadline** — require `cmd package list packages` to succeed.
 8. **Baseline** — record fingerprint, build ID, API, ABI, model, display, `adb devices -l`, manifest/tool provenance, and clear logcat.
 9. **Observe continuously** — start `logcat -b all -v threadtime` before UI actions.
-10. **Drive/assert** — wake, dismiss keyguard if allowed, go home, disable animations for deterministic smoke evidence, expand Quick Settings, and dump the UI hierarchy. Prefer instrumentation/UI Automator semantic assertions over coordinate taps for later tests.
+10. **Drive/assert** — wake, dismiss keyguard if allowed, go home, disable animations for deterministic smoke evidence, expand Quick Settings using the live display dimensions, and retry the transient UI hierarchy dump within a fixed attempt bound. Require the Quick Settings image to differ from home and the hierarchy to identify SystemUI. Prefer instrumentation/UI Automator semantic assertions over coordinate taps for later tests.
 11. **Collect always** — screenshots, UI XML, logcat, dumpsys, exit info, and a bounded bugreport. Missing core evidence fails the run. A bugreport timeout or explicit disable is recorded as an allowed evidence exception; other bugreport failures fail.
 12. **Validate/classify** — structurally validate PNGs and scan for target-package Java/native crash and ANR evidence. Raw “FATAL” keyword matching is insufficient.
 13. **Stop** — stop only the owned AVD/instance. A bounded TERM/KILL fallback may clean an owned Emulator PID after failure, but an accepted run requires the graceful owned stop to succeed. Preserve evidence on every exit and write `PASS` only after stop.
@@ -37,7 +37,7 @@ Provide a closed, deterministic-enough loop for booting Android, exercising UI, 
 - Lunch: `aosp_cf_x86_64_only_phone-aosp_current-userdebug`.
 - Host tools: use `$ANDROID_HOST_OUT/bin` from the same build that produced `$ANDROID_PRODUCT_OUT`; never let a stale downloaded host bundle win in `PATH`.
 - Runtime home: unique to the run so stop/reset commands address only that run.
-- Serial: derived from the locked instance (`127.0.0.1:` plus `6520 + instance - 1`), checked for pre-existing listeners/transports, and verified against the generated owned Cuttlefish configuration after launch.
+- Serial: derived from the locked instance (`127.0.0.1:` plus `6520 + instance - 1`), checked for pre-existing listeners/transports, and verified against the generated owned Cuttlefish configuration after launch. Clean-stop probing permits rebinding stale `TIME_WAIT` tuples but remains blocked by an actual listener.
 - Scope: acceptance runtime for every UI change.
 
 Do not depend on an unattended “latest” Cuttlefish CI artifact downloader. No such downloader is checked in. If a prebuilt bundle is ever approved, mirror a human-selected image and matching host package with identical build ID and checksums; the baseline script deliberately uses only same-build local images and host tools.

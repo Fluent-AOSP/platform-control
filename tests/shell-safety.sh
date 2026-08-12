@@ -93,6 +93,9 @@ mapfile -t telegram_api_files < <(grep -RIl 'api\.telegram\.org' scripts --inclu
 grep -Fq 'ACCEPT_ANDROID_SDK_LICENSES=I_HAVE_AUTHORITY_TO_ACCEPT' scripts/sdk-emulator-smoke.sh
 grep -Fq 'INSTALL_MISSING_SDK_PACKAGES' scripts/sdk-emulator-smoke.sh
 grep -Fq -- '--no-use-superproject' scripts/aosp-init-sync.sh
+grep -Fq 'display_size=' scripts/lib/common.sh
+grep -Fq 'package="com.android.systemui"' scripts/lib/common.sh
+grep -Fq 'socket.SO_REUSEADDR' scripts/cuttlefish-smoke.sh
 for signal_script in scripts/aosp-init-sync.sh scripts/aosp-build.sh; do
   grep -Fq "trap 'exit 130' INT" "$signal_script"
   grep -Fq "trap 'exit 143' TERM" "$signal_script"

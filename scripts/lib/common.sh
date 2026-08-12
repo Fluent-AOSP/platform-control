@@ -207,7 +207,7 @@ collect_standard_evidence() {
 }
 
 capture_ui_smoke() {
-  local adb_bin=$1 serial=$2 run_dir=$3
+  local adb_bin=$1 serial=$2 run_dir=$3 display_size width height swipe_x swipe_start swipe_end attempt
 
   adb_for "$adb_bin" "$serial" shell input keyevent KEYCODE_WAKEUP
   adb_for "$adb_bin" "$serial" shell wm dismiss-keyguard
@@ -215,20 +215,63 @@ capture_ui_smoke() {
   adb_for "$adb_bin" "$serial" shell settings put global window_animation_scale 0
   adb_for "$adb_bin" "$serial" shell settings put global transition_animation_scale 0
   adb_for "$adb_bin" "$serial" shell settings put global animator_duration_scale 0
+  adb_for "$adb_bin" "$serial" shell cmd statusbar collapse >/dev/null 2>&1 || true
   sleep 3
   adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/home.png"
 
-  if ! adb_for "$adb_bin" "$serial" shell cmd statusbar expand-settings; then
-    adb_for "$adb_bin" "$serial" shell input swipe 540 0 540 1800 500
-    adb_for "$adb_bin" "$serial" shell input swipe 540 0 540 1800 500
-  fi
+  adb_for "$adb_bin" "$serial" shell wm size >"$run_dir/ui-display-size.txt"
+  display_size=$(tr -d '\r' <"$run_dir/ui-display-size.txt" | awk -F ': ' '/Physical size|Override size/ {size=$2} END {print size}')
+  [[ "$display_size" =~ ^([0-9]+)x([0-9]+)$ ]] || {
+    printf 'could not parse display size: %s\n' "$display_size" >"$run_dir/ui-state-validation.txt"
+    return 1
+  }
+  width=${BASH_REMATCH[1]}
+  height=${BASH_REMATCH[2]}
+  swipe_x=$((width / 2))
+  swipe_start=$((height / 50))
+  (( swipe_start > 0 )) || swipe_start=1
+  swipe_end=$((height * 4 / 5))
+
+  # Keep the direct SystemUI request, then issue display-relative gestures too:
+  # some platform versions return success while ignoring the shell request.
+  adb_for "$adb_bin" "$serial" shell cmd statusbar expand-settings \
+    >"$run_dir/statusbar-command.txt" 2>&1 || true
+  adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
+  adb_for "$adb_bin" "$serial" shell input swipe "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" 500
   sleep 3
   adb_for "$adb_bin" "$serial" exec-out screencap -p >"$run_dir/quick-settings.png"
-  adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/window.xml \
-    >"$run_dir/uiautomator.txt" 2>&1
-  adb_for "$adb_bin" "$serial" pull /sdcard/window.xml "$run_dir/window.xml" \
-    >"$run_dir/adb-pull-ui.txt" 2>&1
-  [[ -s "$run_dir/window.xml" ]] || return 1
+
+  : >"$run_dir/uiautomator.txt"
+  : >"$run_dir/adb-pull-ui.txt"
+  adb_for "$adb_bin" "$serial" shell rm -f /sdcard/window.xml >/dev/null 2>&1 || true
+  for attempt in 1 2 3 4 5; do
+    printf 'attempt=%s\n' "$attempt" >>"$run_dir/uiautomator.txt"
+    if adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/window.xml \
+        >>"$run_dir/uiautomator.txt" 2>&1 \
+        && adb_for "$adb_bin" "$serial" pull /sdcard/window.xml "$run_dir/window.xml" \
+        >>"$run_dir/adb-pull-ui.txt" 2>&1 \
+        && [[ -s "$run_dir/window.xml" ]]; then
+      break
+    fi
+    sleep 2
+  done
+  [[ -s "$run_dir/window.xml" ]] || {
+    printf 'UI hierarchy was unavailable after five attempts\n' >"$run_dir/ui-state-validation.txt"
+    return 1
+  }
+  if cmp -s "$run_dir/home.png" "$run_dir/quick-settings.png"; then
+    printf 'Quick Settings screenshot is identical to the collapsed home screenshot\n' \
+      >"$run_dir/ui-state-validation.txt"
+    return 1
+  fi
+  if ! grep -Fq 'package="com.android.systemui"' "$run_dir/window.xml"; then
+    printf 'Quick Settings hierarchy does not contain com.android.systemui\n' \
+      >"$run_dir/ui-state-validation.txt"
+    return 1
+  fi
+  printf 'PASS display=%sx%s swipe=%s,%s-%s,%s hierarchy=com.android.systemui\n' \
+    "$width" "$height" "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" \
+    >"$run_dir/ui-state-validation.txt"
 
   {
     validate_png "$run_dir/home.png"

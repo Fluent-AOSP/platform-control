@@ -144,6 +144,9 @@ import socket
 import sys
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# A cleanly stopped listener can leave client/server tuples in TIME_WAIT. Reuse
+# permits rebinding those stale tuples while an actual listener still blocks it.
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 try:
     sock.bind(("127.0.0.1", int(sys.argv[1])))
 except OSError:
