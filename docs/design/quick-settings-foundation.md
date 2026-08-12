@@ -2,7 +2,7 @@
 
 ## Scope
 
-M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth adds a scoped Windows-blue and cool-neutral Acrylic-like color/material system. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
+M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth added a scoped Windows-blue and cool-neutral color/material system; the sixth extends that system to the panel and brightness control. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
 Windows 11 Quick Settings is the canonical visual reference. The Android implementation should be recognizably similar as a complete system—compact control geometry, flat split controls, restrained strokes, dense spacing, overlay materials, typography proportions, and motion—while retaining Android gestures, state production, security, accessibility, and adaptive layout.
 
@@ -92,6 +92,12 @@ When the platform shade-blur feature is available, inactive control layers are t
 
 The color override is limited to Quick Settings theme roots. The shared brightness implementation retains its upstream defaults for the standalone Settings brightness dialog; each Quick Settings host explicitly injects its Fluent slider colors. State production, disabled alpha semantics, click handling, editing, brightness behavior, and accessibility remain platform-owned.
 
+### Sixth implementation batch: panel material and brightness control
+
+The compatibility, scene, and overlay roots now share a cool `#CCF3F3F3` light / `#CC202020` dark panel tint when platform transparency is active. Scene and overlay hosts select the opaque semantic surface when their runtime view models report that transparency is unavailable; the compatibility tint composes over the platform-owned shade fallback. This extends the Acrylic-like hierarchy from individual controls to the Quick Settings panel without changing Android blur ownership or privacy/performance decisions.
+
+Quick Settings brightness now uses a 4 dp rounded line, a compact 20 dp thumb, and the existing 20 dp state icon inside a 32 dp visual track slot. Compose retains a directly tested 48 dp slider target. The custom track mirrors its active segment in RTL and derives the icon-color transition from the measured track width rather than a fixed threshold. Gamma mapping, value animation, drag/stop callbacks, haptics, falsing, policy restrictions, app-override warnings, brightness mirroring, semantics, and the standalone Settings brightness appearance remain unchanged.
+
 ### Preserved Android tokens
 
 | Concern | Preserved source |
@@ -142,13 +148,19 @@ The final Windows 11-aligned expanded reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`
 - Image SHA-256: `f2aae20579b5b5f6e54ffd99faf038e03e8a7a03d6f85551770d87d09ac83a04`
 
-The final Windows-blue and Acrylic-like expanded reference is tracked at:
+The Windows-blue and control-layer reference is tracked at:
 
 - `docs/baselines/quick-settings/android17-windows11-fluent-colors-expanded.png`
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T115229Z`
 - Image SHA-256: `3b273040401055db41cac29b0d57d8abd048656ab1f966c54265fd1185c3dc67`
 
-The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded references additionally prove the resource-backed brightness container, full Quick Settings hierarchy, and host-specific footer while retaining platform-owned state behavior and controls.
+The current Acrylic-like panel and thin-brightness reference is tracked at:
+
+- `docs/baselines/quick-settings/android17-windows11-fluent-panel-brightness-expanded.png`
+- Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153553Z`
+- Image SHA-256: `0d124501add20407fc1f6aa0466b3e20b08162ac8c9193b6fb735d4cb23e546a`
+
+The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded references additionally prove the resource-backed brightness control, full Quick Settings hierarchy, and host-specific footer while retaining platform-owned state behavior and controls.
 
 ## Validation contract
 
@@ -244,6 +256,24 @@ The first final-image launch exposed and corrected double-composited translucent
 
 Independent final review reported no blockers. The first post-build launch normalized only generated `super.img` and `userdata.img`; it was also rejected because the second automation gesture remained at the valid first-pull view instead of reaching the expanded brightness/footer gate. The next two runs used byte-identical complete inputs and passed all UI, crash/ANR, bugreport, graceful-stop, process/listener, and ADB cleanup gates. The final verified expanded frame was delivered through the private Telegram channel as message 50.
 
+## Sixth-batch validation
+
+- AOSP commit: `b8d800b4bae9c68907c1b4e3c12c4968af60ff1a`
+- Parent: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
+- Exported patch: `patches/0008-frameworks-base-fluent-panel-brightness.patch`
+- Patch SHA-256: `43fcdff9556f42848f2792b511fba73950714a9960034be1db1a0fd697ca0499`
+- Final corrected-source compile: `/home/azureuser/android-test-artifacts/systemui-fluent-panel-slider-final-build-20260812T150755Z`
+- Focused on-device evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T152127Z`
+- Focused result: 93 discovered, 84 passed, 9 upstream configuration assumptions, 0 failed. The passing brightness test directly verifies the 48 dp Fluent slider target.
+- Final incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T152556Z`
+- Accepted identical-input Cuttlefish pair:
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153201Z`
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T153553Z`
+- Accepted source-manifest SHA-256: `b3150310ff73d05c471e7e24d0d6f6e387bf213d74aab92e6afb6ea38792ac76`
+- Accepted product-checksum-list SHA-256: `88cae2bdc138b55d327637d637bfc4bb98a5bfa3d22b11f83c08bd540a2895c5`
+
+Independent review found no blocker after the runtime no-blur fallback and measured icon-threshold fixes. The first visible candidate exposed that the cached draw layer did not repaint the asynchronously loaded brightness icon; the final source renders the icon as a Compose child and supersedes that candidate build. The first launch of the final image normalized only generated `super.img` and `userdata.img`. The accepted pair then used byte-identical source manifests and complete image checksum lists, with both runs reporting `PASS`, `CLEAN`, and `expanded=true`. The representative expanded frame was delivered through the private Telegram channel as message 57.
+
 ## Batched follow-up work
 
-Acrylic/Mica approximation, detailed views, motion, large-screen runtime coverage, and configuration work will be grouped into materially larger coherent batches. Each batch uses focused build/test work while editing, followed by one final incremental product build and runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.
+Acrylic readability/performance coverage, detailed views, motion, large-screen runtime coverage, and configuration work will be grouped into materially larger coherent batches. Each batch uses focused build/test work while editing, followed by one final incremental product build and runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.

@@ -115,6 +115,23 @@ Settings. Applying the patch produces local commit
 `9f104c3c949e777bebe6f9f57da0d9667f7f055a`; the patch SHA-256 is
 `e28b75330ed051ad3145c08ee1f4e126fd48082815ada1b807289f595719e8f2`.
 
+## Fluent Quick Settings panel and brightness treatment
+
+`0008-frameworks-base-fluent-panel-brightness.patch` applies after patch
+0007, at local `frameworks/base` revision
+`9f104c3c949e777bebe6f9f57da0d9667f7f055a`.
+
+The patch extends the scoped color mapping with a cool translucent panel tint
+across the compatibility, scene, and overlay hosts. Scene and overlay hosts
+select the opaque surface whenever runtime transparency is unavailable. It also
+replaces the Quick Settings brightness visual with a 4 dp line and compact 20 dp
+thumb/icon treatment while Compose preserves the 48 dp interaction target.
+Brightness state, gestures, mirroring, falsing, haptics, policy restrictions,
+semantics, RTL progress direction, and standalone Settings defaults remain
+platform-owned. Applying the patch produces local commit
+`b8d800b4bae9c68907c1b4e3c12c4968af60ff1a`; the patch SHA-256 is
+`43fcdff9556f42848f2792b511fba73950714a9960034be1db1a0fd697ca0499`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -135,6 +152,8 @@ test "$(git rev-parse HEAD)" = 9f67040d68f04f1dec7c347134fc7a18a2a232a7
 git am /home/azureuser/fluent-aosp/patches/0006-frameworks-base-windows11-fluent-quick-settings.patch
 test "$(git rev-parse HEAD)" = e2210836149cee234211a39dc44e866bf0219650
 git am /home/azureuser/fluent-aosp/patches/0007-frameworks-base-fluent-quick-settings-colors.patch
+test "$(git rev-parse HEAD)" = 9f104c3c949e777bebe6f9f57da0d9667f7f055a
+git am /home/azureuser/fluent-aosp/patches/0008-frameworks-base-fluent-panel-brightness.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's
