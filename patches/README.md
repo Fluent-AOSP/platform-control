@@ -50,6 +50,22 @@ state distinction, and compact minimum touch targets. Applying the patch produce
 local commit `7a6ec03afcd84148e966a65eba74330967d012f2`; the patch SHA-256 is
 `923c7e0afbb8d68bc52868c7479fc07de666d28a40aef9571e5153633533f200`.
 
+## Quick Settings semantic layout tokens
+
+`0004-frameworks-base-quick-settings-layout-tokens.patch` applies after patch
+0003, at local `frameworks/base` revision
+`7a6ec03afcd84148e966a65eba74330967d012f2`.
+
+The patch adds component-semantic icon-size and content-spacing resources,
+reduces compact glyph sizes while retaining tile and toggle targets, and makes
+normal and resize-mode edit tiles share the same compact 8 dp content rhythm.
+Desktop effective glyph sizes and 6 dp content spacing are preserved explicitly;
+inter-tile edit-grid spacing remains independent. It also resource-backs the
+unchanged logical start/end padding and extends token and overlay tests. Applying
+the patch produces local commit `a25ecd17bfee2711fc3194d396d4de6f225632df`;
+the patch SHA-256 is
+`04eb5b21a2e0140e9c62c7acc11e5a138255e909bf9bf3c6e1380e81f6c6e41e`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -62,6 +78,8 @@ git am /home/azureuser/fluent-aosp/patches/0002-build-soong-ci-tests-external-ou
 cd /mnt/aosp/frameworks/base
 test "$(git rev-parse HEAD)" = 94b4c163b7dfe5ce3607f7bb8456f9573f7de57d
 git am /home/azureuser/fluent-aosp/patches/0003-frameworks-base-quick-settings-shape-tokens.patch
+test "$(git rev-parse HEAD)" = 7a6ec03afcd84148e966a65eba74330967d012f2
+git am /home/azureuser/fluent-aosp/patches/0004-frameworks-base-quick-settings-layout-tokens.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's

@@ -1,0 +1,328 @@
+From a25ecd17bfee2711fc3194d396d4de6f225632df Mon Sep 17 00:00:00 2001
+From: Foxtrot47 <jjneutron@outlook.com>
+Date: Wed, 12 Aug 2026 08:05:57 +0000
+Subject: [PATCH] Refine Quick Settings tile layout tokens
+
+Change-Id: I1a6a90eb4b54d18eadf143c68b35aa6f364b236d
+---
+ .../res/values-sw600dp/shade_dimens.xml       | 33 ++++++++++++--
+ packages/SystemUI/res/values/shade_dimens.xml | 16 +++++--
+ .../ui/compose/infinitegrid/CommonTile.kt     | 36 ++++++---------
+ .../ui/compose/infinitegrid/EditTile.kt       |  3 +-
+ .../qs/panels/ui/compose/infinitegrid/Tile.kt |  4 +-
+ .../ui/compose/QuickSettingsTokenTest.kt      | 45 +++++++++++++++++++
+ .../QuickSettingsShadeOverlayTest.kt          |  4 +-
+ 7 files changed, 107 insertions(+), 34 deletions(-)
+
+diff --git a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+index 64275f661864..634d391a7864 100644
+--- a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
++++ b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+@@ -37,6 +37,24 @@
+     <dimen
+         name="qs_shape_tile_inactive_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">18dp</dimen>
++    <dimen
++        name="qs_size_tile_icon_only_icon"
++        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
++    <dimen
++        name="qs_size_tile_labeled_icon"
++        android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
++    <dimen
++        name="qs_spacing_tile_content"
++        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++    <dimen
++        name="qs_spacing_tile_start"
++        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++    <dimen
++        name="qs_spacing_tile_end"
++        android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
++    <dimen
++        name="qs_spacing_tile_dual_target_end"
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_tooltip_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
+@@ -46,9 +64,18 @@
+     <dimen
+         name="common_tile_default_active_tile_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_tile_active_corner_radius</dimen>
++    <dimen
++        name="common_tile_default_content_spacing"
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_spacing_tile_content</dimen>
++    <dimen
++        name="common_tile_default_dual_target_end_padding"
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_spacing_tile_dual_target_end</dimen>
++    <dimen
++        name="common_tile_default_end_padding"
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_spacing_tile_end</dimen>
+     <dimen
+         name="common_tile_default_icon_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_size_tile_icon_only_icon</dimen>
+     <dimen
+         name="common_tile_default_inactive_icon_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_icon_inactive_corner_radius</dimen>
+@@ -57,10 +84,10 @@
+         android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_tile_inactive_corner_radius</dimen>
+     <dimen
+         name="common_tile_default_large_tile_icon_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_size_tile_labeled_icon</dimen>
+     <dimen
+         name="common_tile_default_start_padding"
+-        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_spacing_tile_start</dimen>
+     <dimen
+         name="common_tile_default_tile_height"
+         android:featureFlag="com.android.systemui.desktop_sizing">56dp</dimen>
+diff --git a/packages/SystemUI/res/values/shade_dimens.xml b/packages/SystemUI/res/values/shade_dimens.xml
+index ececccde3202..c5a85dbebea8 100644
+--- a/packages/SystemUI/res/values/shade_dimens.xml
++++ b/packages/SystemUI/res/values/shade_dimens.xml
+@@ -33,15 +33,23 @@
+     <dimen name="qs_shape_icon_inactive_corner_radius">16dp</dimen>
+     <dimen name="qs_shape_tile_active_corner_radius">16dp</dimen>
+     <dimen name="qs_shape_tile_inactive_corner_radius">20dp</dimen>
++    <dimen name="qs_size_tile_icon_only_icon">28dp</dimen>
++    <dimen name="qs_size_tile_labeled_icon">24dp</dimen>
++    <dimen name="qs_spacing_tile_content">8dp</dimen>
++    <dimen name="qs_spacing_tile_start">8dp</dimen>
++    <dimen name="qs_spacing_tile_end">12dp</dimen>
++    <dimen name="qs_spacing_tile_dual_target_end">8dp</dimen>
+     <dimen name="qs_tooltip_corner_radius">16dp</dimen>
+     <dimen name="common_tile_default_active_icon_corner_radius">@dimen/qs_shape_icon_active_corner_radius</dimen>
+     <dimen name="common_tile_default_active_tile_corner_radius">@dimen/qs_shape_tile_active_corner_radius</dimen>
+-    <dimen name="common_tile_default_dual_target_end_padding">8dp</dimen>
+-    <dimen name="common_tile_default_icon_size">32dp</dimen>
++    <dimen name="common_tile_default_content_spacing">@dimen/qs_spacing_tile_content</dimen>
++    <dimen name="common_tile_default_dual_target_end_padding">@dimen/qs_spacing_tile_dual_target_end</dimen>
++    <dimen name="common_tile_default_end_padding">@dimen/qs_spacing_tile_end</dimen>
++    <dimen name="common_tile_default_icon_size">@dimen/qs_size_tile_icon_only_icon</dimen>
+     <dimen name="common_tile_default_inactive_icon_corner_radius">@dimen/qs_shape_icon_inactive_corner_radius</dimen>
+     <dimen name="common_tile_default_inactive_tile_corner_radius">@dimen/qs_shape_tile_inactive_corner_radius</dimen>
+-    <dimen name="common_tile_default_large_tile_icon_size">28dp</dimen>
+-    <dimen name="common_tile_default_start_padding">8dp</dimen>
++    <dimen name="common_tile_default_large_tile_icon_size">@dimen/qs_size_tile_labeled_icon</dimen>
++    <dimen name="common_tile_default_start_padding">@dimen/qs_spacing_tile_start</dimen>
+     <dimen name="common_tile_default_tile_height">72dp</dimen>
+     <dimen name="common_tile_default_toggle_target_size">56dp</dimen>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
+index 6db03f5f11cb..cd134ed1b100 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
+@@ -95,7 +95,6 @@ import com.android.systemui.common.shared.model.Icon
+ import com.android.systemui.common.ui.compose.Icon
+ import com.android.systemui.common.ui.compose.load
+ import com.android.systemui.compose.modifiers.sysuiResTag
+-import com.android.systemui.flags.DesktopSizing
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconHeight
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.SideIconWidth
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TILE_INITIAL_DELAY_MILLIS
+@@ -451,23 +450,13 @@ object CommonTileDefaults {
+     val LargeTileIconSize: Dp
+         @Composable
+         @ReadOnlyComposable
+-        get() =
+-            if (DesktopSizing.isEnabled) {
+-                smallIconSize
+-            } else {
+-                largeIconSize
+-            }
++        get() = dimensionResource(id = R.dimen.common_tile_default_large_tile_icon_size)
+ 
+     // The size of the icon in the tile with an icon only.
+     val SmallTileIconSize: Dp
+         @Composable
+         @ReadOnlyComposable
+-        get() =
+-            if (DesktopSizing.isEnabled) {
+-                largeIconSize
+-            } else {
+-                smallIconSize
+-            }
++        get() = dimensionResource(id = R.dimen.common_tile_default_icon_size)
+ 
+     val StartPadding: Dp
+         @Composable
+@@ -484,10 +473,20 @@ object CommonTileDefaults {
+         @ReadOnlyComposable
+         get() = dimensionResource(id = R.dimen.common_tile_default_toggle_target_size)
+ 
++    val TileContentSpacing: Dp
++        @Composable
++        @ReadOnlyComposable
++        get() = dimensionResource(id = R.dimen.common_tile_default_content_spacing)
++
++    val TileEndPadding: Dp
++        @Composable
++        @ReadOnlyComposable
++        get() = dimensionResource(id = R.dimen.common_tile_default_end_padding)
++
+     val SideIconWidth = 32.dp
+     val SideIconHeight = 20.dp
+     val ChevronSize = 14.dp
+-    val TileEndPadding = 12.dp
++    // Edit-grid spacing remains independent from the content spacing inside a tile.
+     val TileArrangementPadding = 6.dp
+     val TileLabelBlurWidth = 32.dp
+     const val TILE_MARQUEE_ITERATIONS = 1
+@@ -500,15 +499,6 @@ object CommonTileDefaults {
+     fun longPressLabelMoreDetails() =
+         stringResource(id = R.string.accessibility_long_click_tile_details)
+ 
+-    private val largeIconSize: Dp
+-        @Composable
+-        @ReadOnlyComposable
+-        get() = dimensionResource(id = R.dimen.common_tile_default_large_tile_icon_size)
+-
+-    private val smallIconSize: Dp
+-        @Composable
+-        @ReadOnlyComposable
+-        get() = dimensionResource(id = R.dimen.common_tile_default_icon_size)
+ }
+ 
+ /** Same as Image, but it doesn't clip its content. */
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+index 128c6e53d2c8..7380da64d80e 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+@@ -176,6 +176,7 @@ import com.android.systemui.qs.panels.ui.compose.dragAndDropTileList
+ import com.android.systemui.qs.panels.ui.compose.dragAndDropTileSource
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.InactiveTileCornerRadius
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileArrangementPadding
++import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileContentSpacing
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileHeight
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ToggleTargetSize
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.EditModeTileDefaults.AUTO_SCROLL_DISTANCE
+@@ -1282,7 +1283,7 @@ fun EditTile(
+     val iconSizeDiff = CommonTileDefaults.SmallTileIconSize - CommonTileDefaults.LargeTileIconSize
+     val toggleTargetSize = ToggleTargetSize
+     Row(
+-        horizontalArrangement = spacedBy(6.dp),
++        horizontalArrangement = spacedBy(TileContentSpacing),
+         verticalAlignment = Alignment.CenterVertically,
+         modifier =
+             Modifier.layout { measurable, constraints ->
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
+index 2d6145d17d76..a816432ff061 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
+@@ -92,6 +92,7 @@ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ActiveTileCornerRadius
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.InactiveIconCornerRadius
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.InactiveTileCornerRadius
++import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileContentSpacing
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.TileHeight
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.longPressLabelMoreDetails
+ import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.longPressLabelSettings
+@@ -468,8 +469,9 @@ private fun Context.getTileIcon(icon: IconProvider): Icon {
+     } ?: Icon.Resource(R.drawable.ic_error_outline, null)
+ }
+ 
++@Composable
+ fun tileHorizontalArrangement(): Arrangement.Horizontal {
+-    return spacedBy(space = CommonTileDefaults.TileArrangementPadding, alignment = Alignment.Start)
++    return spacedBy(space = TileContentSpacing, alignment = Alignment.Start)
+ }
+ 
+ @Composable
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+index 112c56ee0307..6b6c73ba699f 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+@@ -50,6 +50,34 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+         )
+     }
+ 
++    @Test
++    fun commonTileLayout_referencesSemanticQuickSettingsTokens() {
++        assertDimensionAlias(
++            R.dimen.common_tile_default_icon_size,
++            R.dimen.qs_size_tile_icon_only_icon,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_large_tile_icon_size,
++            R.dimen.qs_size_tile_labeled_icon,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_content_spacing,
++            R.dimen.qs_spacing_tile_content,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_start_padding,
++            R.dimen.qs_spacing_tile_start,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_end_padding,
++            R.dimen.qs_spacing_tile_end,
++        )
++        assertDimensionAlias(
++            R.dimen.common_tile_default_dual_target_end_padding,
++            R.dimen.qs_spacing_tile_dual_target_end,
++        )
++    }
++
+     @Test
+     fun semanticShapes_keepSubtleStateDistinction() {
+         assertThat(dimension(R.dimen.qs_shape_icon_active_corner_radius))
+@@ -58,11 +86,25 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+             .isLessThan(dimension(R.dimen.qs_shape_tile_inactive_corner_radius))
+     }
+ 
++    @Test
++    fun compactTileLayout_usesFoundationGeometry() {
++        assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
++
++        assertThat(dimensionDp(R.dimen.qs_size_tile_icon_only_icon)).isEqualTo(28f)
++        assertThat(dimensionDp(R.dimen.qs_size_tile_labeled_icon)).isEqualTo(24f)
++        assertThat(dimensionDp(R.dimen.qs_spacing_tile_content)).isEqualTo(8f)
++        assertThat(dimensionDp(R.dimen.qs_spacing_tile_start)).isEqualTo(8f)
++        assertThat(dimensionDp(R.dimen.qs_spacing_tile_end)).isEqualTo(12f)
++        assertThat(dimensionDp(R.dimen.qs_spacing_tile_dual_target_end)).isEqualTo(8f)
++    }
++
+     @Test
+     fun compactTiles_preserveMinimumTouchTargets() {
+         assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
+         val minimumTouchTarget = 48 * context.resources.displayMetrics.density
+ 
++        assertThat(dimensionDp(R.dimen.common_tile_default_tile_height)).isEqualTo(72f)
++        assertThat(dimensionDp(R.dimen.common_tile_default_toggle_target_size)).isEqualTo(56f)
+         assertThat(dimension(R.dimen.common_tile_default_tile_height))
+             .isAtLeast(minimumTouchTarget)
+         assertThat(dimension(R.dimen.common_tile_default_toggle_target_size))
+@@ -79,4 +121,7 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+     }
+ 
+     private fun dimension(@DimenRes resource: Int): Float = context.resources.getDimension(resource)
++
++    private fun dimensionDp(@DimenRes resource: Int): Float =
++        dimension(resource) / context.resources.displayMetrics.density
+ }
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
+index effc5d706278..04c3213e03b0 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
+@@ -146,7 +146,7 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+ 
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("qs_tile_icon"), useUnmergedTree = true)
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 24.dp else 32.dp)
++                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 24.dp else 28.dp)
+ 
+             // Verify the QS shade overlay's width.
+             composeTestRule
+@@ -171,7 +171,7 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+ 
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("qs_tile_icon"), useUnmergedTree = true)
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 20.dp else 28.dp)
++                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 20.dp else 24.dp)
+         }
+ 
+     @Test
+-- 
+2.53.0
+

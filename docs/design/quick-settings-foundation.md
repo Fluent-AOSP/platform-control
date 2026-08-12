@@ -2,7 +2,7 @@
 
 ## Scope
 
-M4 starts at the shared Android 17 Compose tile renderer. The first change is intentionally limited to shape tokens. It does not change tile state production, color roles, typography, iconography, layout count, touch targets, clicks, long-clicks, accessibility semantics, connectivity behavior, or lockscreen policy.
+M4 starts at the shared Android 17 Compose tile renderer. The first two changes are limited to shape and layout tokens. They do not change tile state production, color roles, icon assets, typography, layout count, touch targets, clicks, long-clicks, accessibility semantics, connectivity behavior, or lockscreen policy.
 
 The design goal is a Fluent-inspired hierarchy adapted to Android: softly rounded rectangles with a subtle state-dependent radius change, not a literal WinUI surface and not fixed Windows colors.
 
@@ -37,6 +37,19 @@ Both shade architectures use the shared panel renderer, so host-specific XML or 
 
 Existing `common_tile_default_*` resources become aliases to new component-semantic `qs_shape_*` resources. This keeps current tile consumers stable while making the fork’s visual contract explicit. The Quick Settings tooltip receives a dedicated `qs_tooltip_corner_radius` token at its original 16 dp compact/12 dp desktop values so the tile-only change does not alter transient-surface geometry.
 
+### Second implementation batch
+
+| Semantic token | Compact upstream | Compact target | Large upstream | Large target | Intent |
+|---|---:|---:|---:|---:|---|
+| Icon-only tile glyph | 32 dp | 28 dp | 24 dp effective | 24 dp | Reduce visual weight without shrinking the tile target |
+| Labeled tile glyph | 28 dp | 24 dp | 20 dp effective | 20 dp | Improve icon/label hierarchy and text room |
+| Icon-to-label spacing | 6 dp | 8 dp | 6 dp | 6 dp | Establish compact 8 dp rhythm while preserving desktop density |
+| Start padding | 8 dp | 8 dp | 6 dp | 6 dp | Semantic alias; no geometry change |
+| Regular end padding | 12 dp | 12 dp | 12 dp | 12 dp | Semantic alias; no geometry change |
+| Dual-target end padding | 8 dp | 8 dp | 8 dp | 8 dp | Semantic alias; no geometry change |
+
+Normal tiles and resize-mode edit tiles share the new content-spacing token. Inter-tile edit-grid spacing remains an independent 6 dp value, avoiding drag-geometry changes. Direct semantic icon resources replace the previous desktop runtime inversion while preserving its effective 24/20 dp result.
+
 ### Preserved Android tokens
 
 | Concern | Preserved source |
@@ -69,7 +82,13 @@ The first shape-token reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T065627Z`
 - Image SHA-256: `84f4ccba02f33516eea0fc1be56b2d1ddf0ad653eb4300ac7788301f30e240aa`
 
-Both images contain representative states in one test-owned frame: active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast. Their comparison shows the intended rounded-rectangle hierarchy without changing the platform-owned state palette.
+The shape-plus-layout reference is tracked at:
+
+- `docs/baselines/quick-settings/android17-fluent-layout-compact.png`
+- Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081409Z`
+- Image SHA-256: `771699448567bc41c32e83f3474dfb5d165dea2767afc617eb7f778a33009a37`
+
+All images contain representative states in one test-owned frame: active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast. Their comparison shows the rounded-rectangle hierarchy and reduced glyph weight without changing the platform-owned state palette.
 
 ## Validation contract
 
@@ -96,6 +115,21 @@ Both images contain representative states in one test-owned frame: active Blueto
 
 Both accepted runs passed the SystemUI hierarchy and screenshot gates, target crash/ANR scan, bugreport collection, same-build graceful stop, and post-stop transport/process checks. Their source manifests and complete product-image checksum sets are identical.
 
+## Second-batch validation
+
+- AOSP commit: `a25ecd17bfee2711fc3194d396d4de6f225632df`
+- Parent: `7a6ec03afcd84148e966a65eba74330967d012f2`
+- Exported patch: `patches/0004-frameworks-base-quick-settings-layout-tokens.patch`
+- Patch SHA-256: `04eb5b21a2e0140e9c62c7acc11e5a138255e909bf9bf3c6e1380e81f6c6e41e`
+- Focused evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T080219Z`
+- Focused result: 57 discovered, 48 passed, 9 upstream configuration assumptions, 0 failed. This includes token aliases and values, tile interaction, edit-mode operations, state/accessibility mapping, and overlay tests.
+- Incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T080649Z`
+- Accepted identical-input Cuttlefish pair:
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081409Z`
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081829Z`
+
+The first launch after product packaging normalized the generated `super.img` and `userdata.img`; component partition images were unchanged. The accepted pair was captured after that one-time normalization and has identical source manifests and complete product-image checksum sets. Both runs passed all runtime, evidence, crash/ANR, and clean-stop gates.
+
 ## Batched follow-up work
 
-Further spacing, typography, icon, brightness, toolbar/footer, edit-mode, detailed-view, motion, and configuration work will be grouped into coherent batches. Each batch uses focused builds and tests while iterating, followed by one incremental product build and the required clean runtime pair. This avoids rebuilding product images after every individual token change while retaining the same final evidence gates.
+Further typography, brightness, toolbar/footer, detailed-view, motion, and configuration work will be grouped into materially larger coherent batches. Each batch uses one focused build/test cycle after editing, followed by one incremental product build and final runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.

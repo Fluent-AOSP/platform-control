@@ -39,7 +39,7 @@ Both runs used identical locked manifests and product-image checksum sets, passe
 
 ## M4 — Quick Settings foundation
 
-**Status:** In progress. The first semantic shape-token slice is implemented and validated at AOSP commit `7a6ec03afcd8`. Focused tests passed 41/41, and identical-input runtime evidence is recorded at `/home/azureuser/android-test-artifacts/cuttlefish-20260812T071022Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T071420Z`. Remaining visual and configuration work will be validated in coherent batches rather than rebuilding after each token.
+**Status:** In progress. Shape and layout token batches are implemented at AOSP commits `7a6ec03afcd8` and `a25ecd17bfee`. The latest focused suite discovered 57 tests with 48 passes, 9 upstream configuration assumptions, and 0 failures. Latest identical-input runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081409Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T081829Z`. Remaining visual and configuration work will be accumulated into materially larger batches before rebuilding.
 
 **Deliverables:** Android 17 code inventory, semantic token matrix, representative tile states, screenshot baselines, accessibility and behavior checks.
 
