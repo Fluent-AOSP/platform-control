@@ -41,7 +41,7 @@ Sources: [Fluent design tokens](https://fluent2.microsoft.design/design-tokens),
 
 **Material/Android:** HCT-derived primary, secondary, tertiary, neutral, and neutral-variant tonal palettes mapped to semantic roles; Android can derive them from wallpaper.
 
-**Rule:** keep Monet/dynamic color and accessible role pairing. A Fluent brand seed may be harmonized for selected/high-emphasis roles or offered as an explicit theme policy, but must not silently replace wallpaper personalization. Android has no persistent hover state on touch; focus/hover support still matters for mouse, keyboard, and accessibility input.
+**Rule:** keep accessible semantic role pairing and document any surface that stops following Monet. Quick Settings deliberately uses audited fixed Windows-blue role pairs for active controls to create a clear shell identity; other surfaces retain wallpaper personalization until separately specified and validated. Android has no persistent hover state on touch; focus/hover support still matters for mouse, keyboard, and accessibility input.
 
 Sources: [Fluent color](https://fluent2.microsoft.design/color), [Fluent color tokens](https://fluent2.microsoft.design/color-tokens), [Material color system](https://m3.material.io/styles/color/system/overview), [AOSP dynamic color](https://source.android.com/docs/core/display/dynamic-color).
 
@@ -134,7 +134,7 @@ Sources: [Fluent material](https://fluent2.microsoft.design/material), [Windows 
 
 Preserve collapsed/expanded states, tile ordering/editing, Internet/connectivity behavior, status semantics, long-press destinations, shade gestures, haptics, notifications/media relationships, cutouts/insets, lockscreen privacy, and accessibility actions.
 
-Start with semantic tokens for neutral surfaces, full-control active emphasis, subtle inactive strokes, unavailable state, 4 dp control/8 dp overlay geometry, 12 dp compact gutters, dense 56 dp visible tiles over 48 dp minimum targets, and consistent Fluent icon optics. Use transient blur/tint when the platform supports it and retain an opaque fallback. Validate state without color, dynamic wallpaper/contrast combinations, TalkBack, RTL, landscape/large screens, and frame performance.
+Start with semantic tokens for neutral surfaces, full-control active emphasis, subtle inactive strokes, unavailable state, 4 dp control/8 dp overlay geometry, 12 dp compact gutters, dense 56 dp visible tiles over 48 dp minimum targets, and consistent Fluent icon optics. The selected Quick Settings identity uses Windows-blue `#005FB8`/white in light mode and `#60CDFF`/black in dark mode, centralized behind scoped roles with 6.31:1 and 11.67:1 contrast respectively. Use transient blur/tint when the platform supports it and explicit opaque roles when it does not. Validate state without color, wallpaper/contrast combinations, TalkBack, RTL, landscape/large screens, and frame performance.
 
 AOSP landmarks: `frameworks/base/packages/SystemUI/` and dynamic-color consumers around `ThemeOverlayController`; exact Android 17 seams must be inventoried before editing. See [AOSP connectivity UI](https://source.android.com/docs/core/connect/connectivity-ui).
 

@@ -2,7 +2,7 @@
 
 ## Scope
 
-M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth uses those seams for a cohesive Windows 11-aligned composition. The work does not change tile state production, color-role ownership, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
+M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth adds a scoped Windows-blue and cool-neutral Acrylic-like color/material system. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
 Windows 11 Quick Settings is the canonical visual reference. The Android implementation should be recognizably similar as a complete system—compact control geometry, flat split controls, restrained strokes, dense spacing, overlay materials, typography proportions, and motion—while retaining Android gestures, state production, security, accessibility, and adaptive layout.
 
@@ -82,14 +82,22 @@ This batch supersedes the earlier exploratory radii while retaining their semant
 | Toolbar visual/icon/target | 36/24/48 dp | 32/20/48 dp | Small visible action with full Android target |
 | Tooltip/control/overlay radius | 16/varied/20+ dp | 4/4/8 dp | Consistent Windows geometry hierarchy |
 
-Active split tiles now use one full accent surface rather than a Material-style colored icon well. Inactive and unavailable split targets use transparent icon backgrounds so translucent dynamic surfaces are not composited twice; subtle `outlineVariant` strokes preserve state without restoring a separate well. Primary labels remain 14/20 semibold and secondary labels use the 12/16 regular body role, matching the Windows type ramp without redistributing Segoe. Edit actions, menus, power controls, and toolbar focus shapes follow the same 4/8 dp hierarchy. The compatibility host's independently rendered footer uses the same rounded rectangles, strokes, 20 dp icons, and 14/20 text while retaining 48 dp effective targets. All visible sizes remain separate from interaction and semantic bounds.
+Active split tiles now use one full accent surface rather than a Material-style colored icon well. Inactive and unavailable split targets use transparent icon backgrounds so translucent surfaces are not composited twice; subtle strokes preserve state without restoring a separate well. Primary labels remain 14/20 semibold and secondary labels use the 12/16 regular body role, matching the Windows type ramp without redistributing Segoe. Edit actions, menus, power controls, and toolbar focus shapes follow the same 4/8 dp hierarchy. The compatibility host's independently rendered footer uses the same rounded rectangles, strokes, 20 dp icons, and 14/20 text while retaining 48 dp effective targets. All visible sizes remain separate from interaction and semantic bounds.
+
+### Fifth implementation batch: Windows color and Acrylic-like layers
+
+The Quick Settings roots now install one scoped color scheme across compatibility, scene, and overlay hosts. Active controls use Windows-blue role pairs: `#005FB8` with white content in light mode (6.31:1 contrast) and `#60CDFF` with black content in dark mode (11.67:1). Inactive, unavailable, edit, toolbar, footer, and slider surfaces consume cool neutral semantic container/stroke roles instead of wallpaper-purple Material tones. Tooltips use neutral light/dark role pairs rather than the prior tertiary purple.
+
+When the platform shade-blur feature is available, inactive control layers are translucent so the platform-owned blurred shade remains visible beneath them. When it is unavailable, the same semantic roles resolve to explicit opaque light/dark fills; the forced-dark compatibility path derives its palette from the enclosing platform theme rather than the device's unforced resource configuration. This approximates Acrylic intent without claiming Windows compositor behavior or weakening Android privacy/performance fallbacks.
+
+The color override is limited to Quick Settings theme roots. The shared brightness implementation retains its upstream defaults for the standalone Settings brightness dialog; each Quick Settings host explicitly injects its Fluent slider colors. State production, disabled alpha semantics, click handling, editing, brightness behavior, and accessibility remain platform-owned.
 
 ### Preserved Android tokens
 
 | Concern | Preserved source |
 |---|---|
-| Active color | `MaterialTheme.colorScheme.primary` / `onPrimary` |
-| Inactive surfaces | `LocalAndroidColorScheme.surfaceEffect1` and `surfaceEffect2` |
+| Active color | Scoped `fluent_qs_accent_*` / `fluent_qs_on_accent_*` role pairs |
+| Inactive surfaces | Scoped translucent/opaque `surfaceContainer*` mappings selected by blur availability |
 | Unavailable state | Existing surface/on-surface-variant alpha treatment |
 | Typography scaling/fallback | Platform scalable `titleSmallEmphasized` and `bodySmall` roles |
 | Tile height | 56 dp compact and large-screen |
@@ -97,7 +105,7 @@ Active split tiles now use one full accent surface rather than a Material-style 
 | State and accessibility | `QSTile.State` to `TileUiState` conversion |
 | Tooltip shape | Dedicated 4 dp persistent-control token |
 
-No literal colors are introduced. Wallpaper-derived dynamic color, light/dark pairing, contrast behavior, and unavailable-state semantics remain Android-owned.
+The fixed brand values are centralized as named resources rather than scattered literals. Android still owns light/dark mode, foreground text roles, unavailable-state semantics, high-level shade blur, and fallback behavior. The deliberate fixed accent means Quick Settings no longer follows wallpaper hue for active controls; that trade-off was selected to produce a clearly Windows-like identity.
 
 ## Baseline and current reference
 
@@ -134,7 +142,13 @@ The final Windows 11-aligned expanded reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`
 - Image SHA-256: `f2aae20579b5b5f6e54ffd99faf038e03e8a7a03d6f85551770d87d09ac83a04`
 
-The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded references additionally prove the resource-backed brightness container, full Quick Settings hierarchy, and host-specific footer while retaining platform-owned state colors and controls.
+The final Windows-blue and Acrylic-like expanded reference is tracked at:
+
+- `docs/baselines/quick-settings/android17-windows11-fluent-colors-expanded.png`
+- Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T115229Z`
+- Image SHA-256: `3b273040401055db41cac29b0d57d8abd048656ab1f966c54265fd1185c3dc67`
+
+The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded references additionally prove the resource-backed brightness container, full Quick Settings hierarchy, and host-specific footer while retaining platform-owned state behavior and controls.
 
 ## Validation contract
 
@@ -211,6 +225,24 @@ The packaging launch again normalized only generated `super.img` and `userdata.i
 - Accepted product-checksum-list SHA-256: `dd5351e31f6da35fe0a814381ff669c8d2323cce9933a87986ff7446006ce473`
 
 The first final-image launch exposed and corrected double-composited translucent icon wells and a host-specific Material footer path; that candidate image and build are superseded. The final packaging launch normalized only generated `super.img` and `userdata.img`, with every component partition unchanged. Runs two and three then used byte-identical complete inputs and both passed home, first-pull, expanded hierarchy/screenshot, crash/ANR, bugreport, graceful-stop, listener/process, and ADB cleanup gates. The verified expanded frame was delivered through the private Telegram channel as message 44.
+
+## Fifth-batch validation
+
+- AOSP commit: `9f104c3c949e777bebe6f9f57da0d9667f7f055a`
+- Parent: `e2210836149cee234211a39dc44e866bf0219650`
+- Exported patch: `patches/0007-frameworks-base-fluent-quick-settings-colors.patch`
+- Patch SHA-256: `e28b75330ed051ad3145c08ee1f4e126fd48082815ada1b807289f595719e8f2`
+- Focused compile evidence: `/home/azureuser/android-test-artifacts/systemui-fluent-colors-build-20260812T112213Z`
+- Focused on-device evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T113734Z`
+- Focused result: 88 discovered, 79 passed, 9 upstream configuration assumptions, 0 failed.
+- Incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T114308Z`
+- Accepted identical-input Cuttlefish pair:
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T114817Z`
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T115229Z`
+- Accepted source-manifest SHA-256: `c8f8610dcf1f844be1b7d916e60f4d5ec2b3b4ec92b4cb0fee4ad96665fa9966`
+- Accepted product-checksum-list SHA-256: `c528123388a246efac5e1306fbe57f038ddbce2bbb2c021d0b5c8b29a2340ff9`
+
+Independent final review reported no blockers. The first post-build launch normalized only generated `super.img` and `userdata.img`; it was also rejected because the second automation gesture remained at the valid first-pull view instead of reaching the expanded brightness/footer gate. The next two runs used byte-identical complete inputs and passed all UI, crash/ANR, bugreport, graceful-stop, process/listener, and ADB cleanup gates. The final verified expanded frame was delivered through the private Telegram channel as message 50.
 
 ## Batched follow-up work
 

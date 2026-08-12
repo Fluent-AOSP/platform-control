@@ -99,6 +99,22 @@ policy, accessibility semantics, and adaptive layout. Applying the patch produce
 local commit `e2210836149cee234211a39dc44e866bf0219650`; the patch SHA-256 is
 `f14cb09530e6fc750b4a8085fca301686815d007532528dac0423bc813499d27`.
 
+## Fluent Quick Settings color and material roles
+
+`0007-frameworks-base-fluent-quick-settings-colors.patch` applies after patch
+0006, at local `frameworks/base` revision
+`e2210836149cee234211a39dc44e866bf0219650`.
+
+The patch installs one Quick Settings-scoped Material color mapping across the
+compatibility, scene, and overlay hosts. Active controls use audited Windows-blue
+light/dark role pairs; inactive, unavailable, edit, toolbar, footer, tooltip, and
+brightness surfaces use cool neutral roles. Translucent control fills reveal the
+platform shade blur when available, while explicit opaque light/dark fills cover
+the no-blur path. Shared brightness defaults remain unchanged outside Quick
+Settings. Applying the patch produces local commit
+`9f104c3c949e777bebe6f9f57da0d9667f7f055a`; the patch SHA-256 is
+`e28b75330ed051ad3145c08ee1f4e126fd48082815ada1b807289f595719e8f2`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -117,6 +133,8 @@ test "$(git rev-parse HEAD)" = a25ecd17bfee2711fc3194d396d4de6f225632df
 git am /home/azureuser/fluent-aosp/patches/0005-frameworks-base-quick-settings-chrome-shapes.patch
 test "$(git rev-parse HEAD)" = 9f67040d68f04f1dec7c347134fc7a18a2a232a7
 git am /home/azureuser/fluent-aosp/patches/0006-frameworks-base-windows11-fluent-quick-settings.patch
+test "$(git rev-parse HEAD)" = e2210836149cee234211a39dc44e866bf0219650
+git am /home/azureuser/fluent-aosp/patches/0007-frameworks-base-fluent-quick-settings-colors.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's

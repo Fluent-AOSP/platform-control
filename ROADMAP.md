@@ -39,7 +39,7 @@ Both runs used identical locked manifests and product-image checksum sets, passe
 
 ## M4 — Quick Settings foundation
 
-**Status:** In progress. The Windows 11-aligned composition is implemented through AOSP commit `e2210836149c`. Its focused cycle discovered 87 tests: 78 passed, 9 upstream configuration assumptions, and 0 failed; the final runtime-corrected source then compiled as both `SystemUI` and `SystemUITests`. Final product evidence is `/home/azureuser/android-test-artifacts/aosp-build-20260812T104701Z`; accepted byte-identical runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105446Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`. The next coherent batch replaces the remaining Material tonal impression with a Windows-blue, cool-neutral Acrylic-like color/material system and audited fallbacks.
+**Status:** In progress. Windows 11-aligned composition and color/material roles are implemented through AOSP commit `9f104c3c949e`. The color cycle discovered 88 tests: 79 passed, 9 upstream configuration assumptions, and 0 failed; fixed light/dark accent and tooltip pairs meet at least 4.5:1 contrast, and no-blur paths use explicit opaque roles. Product evidence is `/home/azureuser/android-test-artifacts/aosp-build-20260812T114308Z`; accepted byte-identical runtime evidence is `/home/azureuser/android-test-artifacts/cuttlefish-20260812T114817Z` and `/home/azureuser/android-test-artifacts/cuttlefish-20260812T115229Z`. Remaining foundation work includes broader light/dark/high-contrast, RTL, font-scale, and large-screen runtime coverage.
 
 **Deliverables:** Android 17 code inventory, semantic token matrix, representative tile states, screenshot baselines, accessibility and behavior checks.
 
