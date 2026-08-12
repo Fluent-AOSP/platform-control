@@ -1,0 +1,1257 @@
+From e2210836149cee234211a39dc44e866bf0219650 Mon Sep 17 00:00:00 2001
+From: Foxtrot47 <jjneutron@outlook.com>
+Date: Wed, 12 Aug 2026 10:22:05 +0000
+Subject: [PATCH] Align Quick Settings with Windows 11 Fluent
+
+Change-Id: I9b08f78d6b4315908ed39619e7df39ef891d9a2c
+---
+ .../qs/footer/ui/compose/FooterActions.kt     | 39 ++++++----
+ .../res/values-sw600dp/shade_dimens.xml       | 38 +++++-----
+ packages/SystemUI/res/values/shade_dimens.xml | 54 +++++++-------
+ .../ui/compose/infinitegrid/CommonTile.kt     |  3 +-
+ .../ui/compose/infinitegrid/EditModeTopBar.kt | 12 ++-
+ .../ui/compose/infinitegrid/EditTile.kt       | 48 ++++++++----
+ .../qs/panels/ui/compose/infinitegrid/Tile.kt | 48 ++++++------
+ .../ui/compose/toolbar/EditModeButton.kt      | 11 ++-
+ .../qs/panels/ui/compose/toolbar/PowerMenu.kt | 24 ++++--
+ .../panels/ui/compose/toolbar/SecurityInfo.kt | 15 +++-
+ .../panels/ui/compose/toolbar/TextFeedback.kt |  6 +-
+ .../qs/panels/ui/compose/toolbar/Toolbar.kt   | 74 ++++++++++---------
+ .../ui/compose/QuickSettingsTokenTest.kt      | 35 ++++++---
+ .../QuickSettingsShadeOverlayTest.kt          | 25 +++----
+ 14 files changed, 248 insertions(+), 184 deletions(-)
+
+diff --git a/packages/SystemUI/compose/features/src/com/android/systemui/qs/footer/ui/compose/FooterActions.kt b/packages/SystemUI/compose/features/src/com/android/systemui/qs/footer/ui/compose/FooterActions.kt
+index f6bf90e80715..c951c430d2ba 100644
+--- a/packages/SystemUI/compose/features/src/com/android/systemui/qs/footer/ui/compose/FooterActions.kt
++++ b/packages/SystemUI/compose/features/src/com/android/systemui/qs/footer/ui/compose/FooterActions.kt
+@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
+ import androidx.compose.foundation.layout.height
+ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.layout.size
+-import androidx.compose.foundation.shape.CircleShape
+ import androidx.compose.foundation.shape.CornerSize
+ import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.Icon
+@@ -188,7 +187,7 @@ fun FooterActions(viewModel: FooterActionsViewModel, modifier: Modifier = Modifi
+         if (!notificationShadeBlur()) colorAttr(R.attr.underSurface) else Color.Transparent
+     val backgroundAlphaValue = if (!notificationShadeBlur()) backgroundAlpha::value else ({ 0f })
+     val contentColor = MaterialTheme.colorScheme.onSurface
+-    val backgroundTopRadius = dimensionResource(R.dimen.qs_corner_radius)
++    val backgroundTopRadius = dimensionResource(R.dimen.qs_shape_panel_corner_radius)
+     val backgroundModifier =
+         remember(backgroundColor, backgroundAlphaValue, backgroundTopRadius) {
+             Modifier.animatedBackground(
+@@ -297,7 +296,7 @@ private fun AnimatedFooterTextButton(
+             .graphicsLayer { this.alpha = alpha }
+     ) {
+         val colors = textButtonColors()
+-        CircleExpandable(
++        FooterExpandable(
+             color = colors.background,
+             contentColor = colors.content,
+             borderStroke = colors.border,
+@@ -387,8 +386,9 @@ private fun IconButton(
+     modifier: Modifier = Modifier,
+ ) {
+     val colors = buttonColorsForModel(model)
+-    CircleExpandable(
++    FooterExpandable(
+         color = colors.background,
++        borderStroke = colors.border,
+         onClick = model.onClick,
+         modifier = modifier,
+         useModifierBasedImplementation = useModifierBasedExpandable,
+@@ -427,7 +427,7 @@ private fun NumberButton(
+     val interactionSource = remember { MutableInteractionSource() }
+ 
+     val colors = numberButtonColors()
+-    CircleExpandable(
++    FooterExpandable(
+         color = colors.background,
+         onClick = onClick,
+         interactionSource = interactionSource,
+@@ -437,7 +437,11 @@ private fun NumberButton(
+         Box(Modifier.size(FooterButtonHeight)) {
+             Box(
+                 Modifier.fillMaxSize()
+-                    .clip(CircleShape)
++                    .clip(
++                        RoundedCornerShape(
++                            dimensionResource(R.dimen.qs_shape_tile_active_corner_radius)
++                        )
++                    )
+                     .indication(interactionSource, LocalIndication.current)
+             ) {
+                 Text(
+@@ -462,7 +466,7 @@ private fun NumberButton(
+ }
+ 
+ @Composable
+-private fun CircleExpandable(
++private fun FooterExpandable(
+     color: Color,
+     modifier: Modifier = Modifier,
+     contentColor: Color = contentColorFor(color),
+@@ -472,17 +476,18 @@ private fun CircleExpandable(
+     useModifierBasedImplementation: Boolean,
+     content: @Composable (Expandable) -> Unit,
+ ) {
++    val cornerRadius = dimensionResource(R.dimen.qs_shape_tile_active_corner_radius)
+     Expandable(
+         color = color,
+         contentColor = contentColor,
+         borderStroke = borderStroke,
+-        shape = CircleShape,
++        shape = RoundedCornerShape(cornerRadius),
+         onClick = onClick,
+         interactionSource = interactionSource,
+         modifier =
+             modifier.borderOnFocus(
+                 color = MaterialTheme.colorScheme.secondary,
+-                cornerSize = CornerSize(percent = 50),
++                cornerSize = CornerSize(cornerRadius),
+             ),
+         useModifierBasedImplementation = useModifierBasedImplementation,
+         content = content,
+@@ -511,7 +516,7 @@ private fun TextButton(
+     modifier: Modifier = Modifier,
+ ) {
+     val colors = textButtonColors()
+-    CircleExpandable(
++    FooterExpandable(
+         color = colors.background,
+         contentColor = colors.content,
+         borderStroke = colors.border,
+@@ -528,7 +533,7 @@ private fun TextButton(
+             Text(
+                 text,
+                 Modifier.weight(1f),
+-                style = MaterialTheme.typography.labelLarge,
++                style = MaterialTheme.typography.bodyMedium,
+                 letterSpacing = 0.em,
+                 color = colors.content,
+                 maxLines = 1,
+@@ -570,7 +575,7 @@ private fun TextButtonContent(
+         Text(
+             text,
+             Modifier.weight(1f),
+-            style = MaterialTheme.typography.labelLarge,
++            style = MaterialTheme.typography.bodyMedium,
+             letterSpacing = 0.em,
+             color = contentColor,
+             maxLines = 1,
+@@ -663,7 +668,11 @@ private fun buttonColorsForModel(footerAction: FooterActionsButtonViewModel): Bu
+     }
+ }
+ 
+-private data class ButtonColors(val icon: Color, val background: Color)
++private data class ButtonColors(
++    val icon: Color,
++    val background: Color,
++    val border: BorderStroke? = null,
++)
+ 
+ private data class TextButtonColors(
+     val content: Color,
+@@ -690,6 +699,7 @@ private object FooterActionsDefaults {
+         ButtonColors(
+             icon = MaterialTheme.colorScheme.onSurface,
+             background = LocalAndroidColorScheme.current.surfaceEffect1,
++            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)),
+         )
+ 
+     @Composable
+@@ -698,6 +708,7 @@ private object FooterActionsDefaults {
+         ButtonColors(
+             icon = Color.Unspecified,
+             background = LocalAndroidColorScheme.current.surfaceEffect1,
++            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)),
+         )
+ 
+     @Composable
+@@ -706,7 +717,7 @@ private object FooterActionsDefaults {
+         TextButtonColors(
+             content = MaterialTheme.colorScheme.onSurface,
+             background = LocalAndroidColorScheme.current.surfaceEffect1,
+-            border = null,
++            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)),
+         )
+ 
+     @Composable
+diff --git a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+index 275f41d9b073..28aa0fc6b922 100644
+--- a/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
++++ b/packages/SystemUI/res/values-sw600dp/shade_dimens.xml
+@@ -22,7 +22,7 @@
+ 
+     <dimen
+         name="qs_shape_panel_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="overlay_shade_panel_shape_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_panel_corner_radius</dimen>
+@@ -30,40 +30,40 @@
+     <!-- QS shade overlay common tiles -->
+     <dimen
+         name="qs_shape_brightness_container_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_edit_grid_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">16dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_shape_icon_active_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">10dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_icon_inactive_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">14dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_tile_active_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">14dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_tile_inactive_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">18dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_toolbar_button_background_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_shape_toolbar_feedback_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="qs_size_tile_icon_only_icon"
+-        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
+     <dimen
+         name="qs_size_tile_labeled_icon"
+         android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
+     <dimen
+         name="qs_spacing_tile_content"
+-        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_spacing_tile_start"
+-        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_spacing_tile_end"
+         android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
+@@ -72,7 +72,7 @@
+         android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="qs_tooltip_corner_radius"
+-        android:featureFlag="com.android.systemui.desktop_sizing">12dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">4dp</dimen>
+     <dimen
+         name="common_tile_default_active_icon_corner_radius"
+         android:featureFlag="com.android.systemui.desktop_sizing">@dimen/qs_shape_icon_active_corner_radius</dimen>
+@@ -108,12 +108,12 @@
+         android:featureFlag="com.android.systemui.desktop_sizing">56dp</dimen>
+     <dimen
+         name="common_tile_default_toggle_target_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">44dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">48dp</dimen>
+ 
+     <!-- QS shade overlay brightness bar -->
+     <dimen
+         name="overlay_qs_layout_brightness_icon_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">24dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
+     <dimen
+         name="overlay_qs_layout_brightness_thumb_height"
+         android:featureFlag="com.android.systemui.desktop_sizing">40dp</dimen>
+@@ -133,19 +133,19 @@
+     <!-- QS shade overlay tool bar -->
+     <dimen
+         name="overlay_qs_layout_toolbar_height"
+-        android:featureFlag="com.android.systemui.desktop_sizing">36dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">48dp</dimen>
+     <dimen
+         name="toolbar_bottom_padding"
+-        android:featureFlag="com.android.systemui.desktop_sizing">6dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">8dp</dimen>
+     <dimen
+         name="toolbar_button_colored_background_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">36dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">32dp</dimen>
+     <dimen
+         name="toolbar_button_icon_size"
+         android:featureFlag="com.android.systemui.desktop_sizing">20dp</dimen>
+     <dimen
+         name="toolbar_button_size"
+-        android:featureFlag="com.android.systemui.desktop_sizing">36dp</dimen>
++        android:featureFlag="com.android.systemui.desktop_sizing">48dp</dimen>
+ 
+     <!-- QS shade overlay volume bar -->
+     <dimen
+diff --git a/packages/SystemUI/res/values/shade_dimens.xml b/packages/SystemUI/res/values/shade_dimens.xml
+index a8533f2340c1..0866b9354021 100644
+--- a/packages/SystemUI/res/values/shade_dimens.xml
++++ b/packages/SystemUI/res/values/shade_dimens.xml
+@@ -21,30 +21,30 @@
+ 
+     <!--
+     The horizontal distance between the shade overlay panel (both notifications and quick settings)
+-    and the edge of the screen. This is zero only on Compact screens (< w600dp).
++    and the edge of the screen. Compact layouts use the Fluent small-window gutter.
+     -->
+-    <dimen name="shade_panel_margin_horizontal">0dp</dimen>
++    <dimen name="shade_panel_margin_horizontal">12dp</dimen>
+ 
+-    <dimen name="qs_shape_panel_corner_radius">28dp</dimen>
++    <dimen name="qs_shape_panel_corner_radius">8dp</dimen>
+     <dimen name="overlay_shade_panel_shape_radius">@dimen/qs_shape_panel_corner_radius</dimen>
+ 
+     <!-- QS shade overlay common tiles -->
+     <!-- Component-semantic shape tokens keep tile styling separate from state behavior. -->
+-    <dimen name="qs_shape_brightness_container_corner_radius">16dp</dimen>
+-    <dimen name="qs_shape_edit_grid_corner_radius">20dp</dimen>
+-    <dimen name="qs_shape_icon_active_corner_radius">12dp</dimen>
+-    <dimen name="qs_shape_icon_inactive_corner_radius">16dp</dimen>
+-    <dimen name="qs_shape_tile_active_corner_radius">16dp</dimen>
+-    <dimen name="qs_shape_tile_inactive_corner_radius">20dp</dimen>
+-    <dimen name="qs_shape_toolbar_button_background_corner_radius">10dp</dimen>
+-    <dimen name="qs_shape_toolbar_feedback_corner_radius">10dp</dimen>
+-    <dimen name="qs_size_tile_icon_only_icon">28dp</dimen>
+-    <dimen name="qs_size_tile_labeled_icon">24dp</dimen>
++    <dimen name="qs_shape_brightness_container_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_edit_grid_corner_radius">8dp</dimen>
++    <dimen name="qs_shape_icon_active_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_icon_inactive_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_tile_active_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_tile_inactive_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_toolbar_button_background_corner_radius">4dp</dimen>
++    <dimen name="qs_shape_toolbar_feedback_corner_radius">4dp</dimen>
++    <dimen name="qs_size_tile_icon_only_icon">20dp</dimen>
++    <dimen name="qs_size_tile_labeled_icon">20dp</dimen>
+     <dimen name="qs_spacing_tile_content">8dp</dimen>
+     <dimen name="qs_spacing_tile_start">8dp</dimen>
+     <dimen name="qs_spacing_tile_end">12dp</dimen>
+     <dimen name="qs_spacing_tile_dual_target_end">8dp</dimen>
+-    <dimen name="qs_tooltip_corner_radius">16dp</dimen>
++    <dimen name="qs_tooltip_corner_radius">4dp</dimen>
+     <dimen name="common_tile_default_active_icon_corner_radius">@dimen/qs_shape_icon_active_corner_radius</dimen>
+     <dimen name="common_tile_default_active_tile_corner_radius">@dimen/qs_shape_tile_active_corner_radius</dimen>
+     <dimen name="common_tile_default_content_spacing">@dimen/qs_spacing_tile_content</dimen>
+@@ -55,27 +55,27 @@
+     <dimen name="common_tile_default_inactive_tile_corner_radius">@dimen/qs_shape_tile_inactive_corner_radius</dimen>
+     <dimen name="common_tile_default_large_tile_icon_size">@dimen/qs_size_tile_labeled_icon</dimen>
+     <dimen name="common_tile_default_start_padding">@dimen/qs_spacing_tile_start</dimen>
+-    <dimen name="common_tile_default_tile_height">72dp</dimen>
+-    <dimen name="common_tile_default_toggle_target_size">56dp</dimen>
++    <dimen name="common_tile_default_tile_height">56dp</dimen>
++    <dimen name="common_tile_default_toggle_target_size">48dp</dimen>
+ 
+     <!-- QS shade overlay brightness bar -->
+-    <dimen name="overlay_qs_layout_brightness_icon_size">28dp</dimen>
+-    <dimen name="overlay_qs_layout_brightness_thumb_height">52dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_icon_size">20dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_thumb_height">48dp</dimen>
+     <dimen name="overlay_qs_layout_brightness_thumb_width">4dp</dimen>
+-    <dimen name="overlay_qs_layout_brightness_track_height">40dp</dimen>
+-    <dimen name="overlay_qs_layout_brightness_vertical_padding">6dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_track_height">32dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_vertical_padding">4dp</dimen>
+     <dimen name="overlay_qs_layout_brightness_rounded_corner">@dimen/qs_shape_brightness_container_corner_radius</dimen>
+-    <dimen name="overlay_qs_layout_brightness_frame_width">10dp</dimen>
+-    <dimen name="overlay_qs_layout_brightness_frame_height">6dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_frame_width">8dp</dimen>
++    <dimen name="overlay_qs_layout_brightness_frame_height">4dp</dimen>
+     <dimen name="overlay_qs_layout_toolbar_height">48dp</dimen>
+ 
+     <!-- QS shade layout -->
+     <!-- The horizontal padding and the vertical padding can be different in alternative resources -->
+-    <dimen name="overlay_qs_layout_horizontal_padding">16dp</dimen>
+-    <dimen name="overlay_qs_layout_vertical_padding">16dp</dimen>
++    <dimen name="overlay_qs_layout_horizontal_padding">12dp</dimen>
++    <dimen name="overlay_qs_layout_vertical_padding">12dp</dimen>
+ 
+     <!-- QS shade overlay volume bar -->
+-    <dimen name="overlay_qs_layout_volume_extra_padding">16dp</dimen>
++    <dimen name="overlay_qs_layout_volume_extra_padding">12dp</dimen>
+     <dimen name="overlay_qs_layout_volume_vertical_padding">4dp</dimen>
+     <dimen name="overlay_qs_layout_volume_thumb_height">
+         @dimen/overlay_qs_layout_brightness_thumb_height
+@@ -89,8 +89,8 @@
+ 
+     <!-- QS shade overlay toolbar -->
+     <dimen name="toolbar_bottom_padding">8dp</dimen>
+-    <dimen name="toolbar_button_colored_background_size">36dp</dimen>
+-    <dimen name="toolbar_button_icon_size">24dp</dimen>
++    <dimen name="toolbar_button_colored_background_size">32dp</dimen>
++    <dimen name="toolbar_button_icon_size">20dp</dimen>
+     <dimen name="toolbar_button_size">48dp</dimen>
+ 
+     <!-- QS shade focus rings -->
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
+index cd134ed1b100..a5ae155388b9 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt
+@@ -221,7 +221,7 @@ fun LargeTileLabels(
+             TileLabel(
+                 secondaryLabel ?: "",
+                 color = { animatedSecondaryLabelColor },
+-                style = MaterialTheme.typography.labelMedium,
++                style = MaterialTheme.typography.bodySmall,
+                 isVisible = isVisible,
+                 modifier =
+                     Modifier.thenIf(
+@@ -498,7 +498,6 @@ object CommonTileDefaults {
+     @Composable
+     fun longPressLabelMoreDetails() =
+         stringResource(id = R.string.accessibility_long_click_tile_details)
+-
+ }
+ 
+ /** Same as Image, but it doesn't clip its content. */
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditModeTopBar.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditModeTopBar.kt
+index db5ddeac9f59..2267bcddf37c 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditModeTopBar.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditModeTopBar.kt
+@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.platform.testTag
++import androidx.compose.ui.res.dimensionResource
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.text.TextStyle
+ import androidx.compose.ui.text.style.TextOverflow
+@@ -134,6 +135,7 @@ private fun NavigationArrow(
+             Icons.AutoMirrored.Filled.ArrowBack,
+             contentDescription =
+                 stringResource(id = com.android.internal.R.string.action_bar_up_description),
++            modifier = Modifier.size(20.dp),
+         )
+     }
+ }
+@@ -167,6 +169,7 @@ private fun SingleTopBarAction(
+         Icon(
+             editTopBarActionViewModel.icon,
+             contentDescription = stringResource(id = editTopBarActionViewModel.labelId),
++            modifier = Modifier.size(20.dp),
+         )
+     }
+ }
+@@ -190,12 +193,13 @@ private fun TopBarActionOverflow(
+             Icon(
+                 MoreVert,
+                 contentDescription = stringResource(R.string.qs_edit_menu_content_description),
++                modifier = Modifier.size(20.dp),
+             )
+         }
+         DropdownMenu(
+             expanded = showMenu,
+             onDismissRequest = { showMenu = false },
+-            shape = RoundedCornerShape(26.dp),
++            shape = RoundedCornerShape(dimensionResource(R.dimen.qs_shape_panel_corner_radius)),
+             modifier = Modifier.testTag(OPTIONS_DROP_DOWN_TEST_TAG).requiredWidthIn(min = 216.dp),
+             containerColor = MaterialTheme.colorScheme.surfaceBright,
+         ) {
+@@ -220,7 +224,7 @@ private fun DropdownMenuElement(
+             dismissDropdown()
+         },
+         text = {
+-            Box(modifier = Modifier.padding(start = 6.dp)) {
++            Box(modifier = Modifier.padding(start = 4.dp)) {
+                 Text(
+                     text = stringResource(action.labelId),
+                     style = MaterialTheme.typography.labelLarge,
+@@ -232,8 +236,8 @@ private fun DropdownMenuElement(
+             Icon(action.icon, contentDescription = null, modifier = Modifier.size(20.dp))
+         },
+         colors = menuItemColors(),
+-        contentPadding = PaddingValues(16.dp),
+-        modifier = modifier.heightIn(min = 52.dp),
++        contentPadding = PaddingValues(horizontal = 12.dp),
++        modifier = modifier.heightIn(min = 48.dp),
+     )
+ }
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+index f155cf678fb2..c379f063d34c 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt
+@@ -267,6 +267,10 @@ fun DefaultEditTileGrid(
+             IconButton(
+                 enabled = snapshotViewModel.canUndo,
+                 onClick = snapshotViewModel::undo,
++                shape =
++                    RoundedCornerShape(
++                        dimensionResource(R.dimen.qs_shape_toolbar_button_background_corner_radius)
++                    ),
+                 colors =
+                     IconButtonDefaults.iconButtonColors(
+                         containerColor = LocalAndroidColorScheme.current.surfaceEffect1,
+@@ -276,6 +280,7 @@ fun DefaultEditTileGrid(
+                 Icon(
+                     Undo,
+                     contentDescription = stringResource(id = com.android.internal.R.string.undo),
++                    modifier = Modifier.size(20.dp),
+                 )
+             }
+         }
+@@ -577,17 +582,19 @@ private fun RemoveButton(
+             else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f)
+         }
+ 
++    val actionCornerRadius = dimensionResource(id = R.dimen.qs_shape_tile_active_corner_radius)
+     // Using a Box instead of a Button to animate the colors
+     Box(
+         modifier
++            .requiredHeightIn(min = 48.dp)
+             .drawBehind {
+                 drawRoundRect(
+                     color = backgroundColor,
+-                    cornerRadius = CornerRadius(size.height / 2f),
++                    cornerRadius = CornerRadius(actionCornerRadius.toPx()),
+                 )
+             }
+             .clickable(enabled = enabled, onClick = onClick)
+-            .padding(10.dp)
++            .padding(horizontal = 12.dp, vertical = 8.dp)
+     ) {
+         BasicText(
+             text = stringResource(R.string.qs_customize_remove),
+@@ -731,6 +738,10 @@ private fun AnimatedAvailableTilesGrid(
+ 
+                 TextButton(
+                     onClick = { onEditAction(EditAction.ResetGrid) },
++                    shape =
++                        RoundedCornerShape(
++                            dimensionResource(id = R.dimen.qs_shape_tile_active_corner_radius)
++                        ),
+                     colors =
+                         ButtonDefaults.textButtonColors(
+                             containerColor = MaterialTheme.colorScheme.primary,
+@@ -1089,6 +1100,7 @@ private fun LazyGridItemScope.TileGridCell(
+                     cornerRadius = InactiveTileCornerRadius,
+                     alpha = { containerAlpha },
+                     color = { colors.background },
++                    borderColor = { colors.border },
+                 )
+                 .keyboardShortcuts(cell.tile.tileSpec, selectionState) {
+                     onResize(FinalResizeOperation(cell.tile.tileSpec, !cell.isIcon))
+@@ -1112,6 +1124,7 @@ private fun CategoryHeader(category: TileCategory, modifier: Modifier = Modifier
+             painter = painterResource(category.iconId),
+             contentDescription = null,
+             tint = MaterialTheme.colorScheme.onSurface,
++            modifier = Modifier.size(20.dp),
+         )
+         Text(
+             text = category.label.load() ?: "",
+@@ -1186,7 +1199,11 @@ private fun AvailableTileGridCell(
+                         MaterialTheme.colorScheme.secondary,
+                         CornerSize(InactiveTileCornerRadius),
+                     )
+-                    .tileBackground(cornerRadius = InactiveTileCornerRadius) { colors.background }
++                    .tileBackground(
++                        cornerRadius = InactiveTileCornerRadius,
++                        color = { colors.background },
++                        borderColor = { colors.border },
++                    )
+                     .clickable(
+                         enabled = !cell.isCurrent,
+                         onClick = onClick,
+@@ -1331,11 +1348,7 @@ fun EditTile(
+                 .largeTilePadding(),
+     ) {
+         // Icon
+-        Box(
+-            Modifier.size(ToggleTargetSize).thenIf(tile.isDualTarget) {
+-                Modifier.drawBehind { drawCircle(colors.iconBackground, alpha = progress()) }
+-            }
+-        ) {
++        Box(Modifier.size(ToggleTargetSize)) {
+             SmallTileContent(
+                 iconProvider = { tile.icon },
+                 color = colors.icon,
+@@ -1367,9 +1380,13 @@ private fun Modifier.tileBackground(
+     cornerRadius: Dp,
+     alpha: () -> Float = { 1f },
+     color: () -> Color,
++    borderColor: () -> Color = { Color.Transparent },
+ ): Modifier {
+-    // Clip tile contents from overflowing past the tile
+-    return clip(RoundedCornerShape(cornerRadius)).drawBehind { drawRect(color(), alpha = alpha()) }
++    val shape = RoundedCornerShape(cornerRadius)
++    // Clip tile contents from overflowing past the tile.
++    return clip(shape)
++        .drawBehind { drawRect(color(), alpha = alpha()) }
++        .border(width = 1.dp, color = borderColor(), shape = shape)
+ }
+ 
+ private fun Modifier.keyboardShortcuts(
+@@ -1416,14 +1433,17 @@ private object EditModeTileDefaults {
+         )
+ 
+     @Composable
+-    fun editTileColors(): TileColors =
+-        TileColors(
+-            background = LocalAndroidColorScheme.current.surfaceEffect1,
+-            iconBackground = LocalAndroidColorScheme.current.surfaceEffect2,
++    fun editTileColors(): TileColors {
++        val surface = LocalAndroidColorScheme.current.surfaceEffect1
++        return TileColors(
++            background = surface,
++            iconBackground = surface,
+             label = MaterialTheme.colorScheme.onSurface,
+             secondaryLabel = MaterialTheme.colorScheme.onSurface,
+             icon = MaterialTheme.colorScheme.onSurface,
++            border = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f),
+         )
++    }
+ }
+ 
+ private const val EDIT_MODE_ROOT_TEST_TAG = "EditModeRoot"
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
+index a816432ff061..93e3e07f2c60 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/Tile.kt
+@@ -28,6 +28,7 @@ import androidx.compose.animation.animateColorAsState
+ import androidx.compose.animation.core.animateDpAsState
+ import androidx.compose.foundation.ExperimentalFoundationApi
+ import androidx.compose.foundation.background
++import androidx.compose.foundation.border
+ import androidx.compose.foundation.clickable
+ import androidx.compose.foundation.combinedClickable
+ import androidx.compose.foundation.gestures.Orientation
+@@ -67,6 +68,7 @@ import androidx.compose.ui.semantics.stateDescription
+ import androidx.compose.ui.semantics.toggleableState
+ import androidx.compose.ui.unit.Density
+ import androidx.compose.ui.unit.Dp
++import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.util.trace
+ import com.android.app.tracing.coroutines.launchTraced as launch
+ import com.android.compose.animation.Expandable
+@@ -179,6 +181,7 @@ fun ContentScope.Tile(
+         // TODO(b/361789146): Draw the shapes instead of clipping
+         val tileShape by TileDefaults.animateTileShapeAsState(uiState)
+         val animatedColor by animateColorAsState(colors.background, label = "QSTileBackgroundColor")
++        val animatedBorderColor by animateColorAsState(colors.border, label = "QSTileBorderColor")
+         val isDualTarget = uiState.handlesToggleClick
+         val interactionSource = remember { MutableInteractionSource() }
+ 
+@@ -228,6 +231,7 @@ fun ContentScope.Tile(
+                 modifier =
+                     modifier
+                         .then(surfaceRevealModifier)
++                        .border(width = 1.dp, color = animatedBorderColor, shape = tileShape)
+                         .borderOnFocus(
+                             color = MaterialTheme.colorScheme.secondary,
+                             tileShape.topEnd,
+@@ -416,10 +420,12 @@ fun SmallStaticTile(
+ ) {
+     val colors = TileDefaults.getColorForState(uiState = uiState, iconOnly = true)
+ 
++    val tileShape = TileDefaults.animateTileShapeAsState(uiState).value
+     Box(
+         modifier
+-            .clip(TileDefaults.animateTileShapeAsState(uiState).value)
++            .clip(tileShape)
+             .background(colors.background)
++            .border(width = 1.dp, color = colors.border, shape = tileShape)
+             .size(TileHeight)
+             .clickable(onClick = onClick)
+     ) {
+@@ -440,10 +446,12 @@ fun LargeStaticTile(
+ ) {
+     val colors = TileDefaults.getColorForState(uiState = uiState, iconOnly = false)
+ 
++    val tileShape = TileDefaults.animateTileShapeAsState(uiState).value
+     Box(
+         modifier
+-            .clip(TileDefaults.animateTileShapeAsState(uiState).value)
++            .clip(tileShape)
+             .background(colors.background)
++            .border(width = 1.dp, color = colors.border, shape = tileShape)
+             .height(TileHeight)
+             .clickable(onClick = onClick)
+             .largeTilePadding()
+@@ -517,6 +525,7 @@ data class TileColors(
+     val label: Color,
+     val secondaryLabel: Color,
+     val icon: Color,
++    val border: Color = Color.Transparent,
+ )
+ 
+ @VisibleForTesting
+@@ -531,45 +540,35 @@ private object TileDefaults {
+     fun activeTileColors(): TileColors =
+         TileColors(
+             background = MaterialTheme.colorScheme.primary,
+-            iconBackground = MaterialTheme.colorScheme.primary,
++            iconBackground = Color.Transparent,
+             label = MaterialTheme.colorScheme.onPrimary,
+             secondaryLabel = MaterialTheme.colorScheme.onPrimary,
+             icon = MaterialTheme.colorScheme.onPrimary,
++            border = Color.Transparent,
+         )
+ 
+-    /** An active tile with dual target only show the active color on the icon */
++    /** Active split controls use one Fluent accent surface; interaction regions remain separate. */
+     @Composable
+     @ReadOnlyComposable
+-    fun activeDualTargetTileColors(): TileColors =
+-        TileColors(
+-            background = LocalAndroidColorScheme.current.surfaceEffect1,
+-            iconBackground = MaterialTheme.colorScheme.primary,
+-            label = MaterialTheme.colorScheme.onSurface,
+-            secondaryLabel = MaterialTheme.colorScheme.onSurface,
+-            icon = MaterialTheme.colorScheme.onPrimary,
+-        )
++    fun activeDualTargetTileColors(): TileColors = activeTileColors()
+ 
+     @Composable
+     @ReadOnlyComposable
+-    fun inactiveDualTargetTileColors(): TileColors =
+-        TileColors(
+-            background = LocalAndroidColorScheme.current.surfaceEffect1,
+-            iconBackground = LocalAndroidColorScheme.current.surfaceEffect2,
+-            label = MaterialTheme.colorScheme.onSurface,
+-            secondaryLabel = MaterialTheme.colorScheme.onSurface,
+-            icon = MaterialTheme.colorScheme.onSurface,
+-        )
++    fun inactiveDualTargetTileColors(): TileColors = inactiveTileColors()
+ 
+     @Composable
+     @ReadOnlyComposable
+-    fun inactiveTileColors(): TileColors =
+-        TileColors(
+-            background = LocalAndroidColorScheme.current.surfaceEffect1,
++    fun inactiveTileColors(): TileColors {
++        val surface = LocalAndroidColorScheme.current.surfaceEffect1
++        return TileColors(
++            background = surface,
+             iconBackground = Color.Transparent,
+             label = MaterialTheme.colorScheme.onSurface,
+             secondaryLabel = MaterialTheme.colorScheme.onSurface,
+             icon = MaterialTheme.colorScheme.onSurface,
++            border = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f),
+         )
++    }
+ 
+     @Composable
+     @ReadOnlyComposable
+@@ -578,10 +577,11 @@ private object TileDefaults {
+         val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .38f)
+         return TileColors(
+             background = surfaceColor,
+-            iconBackground = surfaceColor,
++            iconBackground = Color.Transparent,
+             label = onSurfaceVariantColor,
+             secondaryLabel = onSurfaceVariantColor,
+             icon = onSurfaceVariantColor,
++            border = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .2f),
+         )
+     }
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/EditModeButton.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/EditModeButton.kt
+index a6c8bcf2aaa5..6c4cc7e18efa 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/EditModeButton.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/EditModeButton.kt
+@@ -17,6 +17,7 @@
+ package com.android.systemui.qs.panels.ui.compose.toolbar
+ 
+ import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
+ import androidx.compose.foundation.shape.CornerSize
+ import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.ExperimentalMaterial3Api
+@@ -46,6 +47,7 @@ import androidx.compose.ui.layout.boundsInWindow
+ import androidx.compose.ui.layout.layout
+ import androidx.compose.ui.platform.LocalConfiguration
+ import androidx.compose.ui.platform.LocalDensity
++import androidx.compose.ui.res.dimensionResource
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.text.style.TextAlign
+ import androidx.compose.ui.unit.Density
+@@ -117,7 +119,7 @@ fun EditModeButton(
+             },
+             tooltip = {
+                 PlainTooltip(
+-                    shape = RoundedCornerShape(16.dp),
++                    shape = RoundedCornerShape(dimensionResource(R.dimen.qs_tooltip_corner_radius)),
+                     containerColor = tertiaryColor,
+                     contentColor = MaterialTheme.colorScheme.onTertiary,
+                     shadowElevation = EditModeButtonDefaults.TooltipShadowElevation,
+@@ -146,20 +148,23 @@ fun EditModeButton(
+                 }
+             },
+         ) {
++            val buttonCornerRadius =
++                dimensionResource(R.dimen.qs_shape_toolbar_button_background_corner_radius)
+             IconButton(
+                 onClick = viewModel::onButtonClick,
+-                shape = RoundedCornerShape(CornerSize(28.dp)),
++                shape = RoundedCornerShape(buttonCornerRadius),
+                 modifier =
+                     Modifier.sysuiResTag("qs_edit_mode_button")
+                         .borderOnFocus(
+                             color = MaterialTheme.colorScheme.secondary,
+-                            cornerSize = CornerSize(24.dp),
++                            cornerSize = CornerSize(buttonCornerRadius),
+                         ),
+             ) {
+                 Icon(
+                     imageVector = Edit,
+                     contentDescription =
+                         stringResource(id = R.string.accessibility_quick_settings_edit),
++                    modifier = Modifier.size(20.dp),
+                 )
+             }
+         }
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/PowerMenu.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/PowerMenu.kt
+index 8f5a3baaea6d..8e0574c1f4db 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/PowerMenu.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/PowerMenu.kt
+@@ -25,9 +25,11 @@ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.fillMaxWidth
+ import androidx.compose.foundation.layout.height
+ import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
+ import androidx.compose.foundation.layout.width
+ import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.Card
++import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
+ import androidx.compose.material3.ripple
+ import androidx.compose.runtime.Composable
+@@ -35,6 +37,7 @@ import androidx.compose.runtime.key
+ import androidx.compose.runtime.remember
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.res.dimensionResource
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.semantics.Role
+ import androidx.compose.ui.unit.Dp
+@@ -50,6 +53,7 @@ import com.android.systemui.common.ui.compose.Icon
+ import com.android.systemui.globalactions.ui.viewmodel.GlobalActionUiState
+ import com.android.systemui.lifecycle.rememberViewModel
+ import com.android.systemui.qs.panels.ui.viewmodel.toolbar.PowerMenuViewModel
++import com.android.systemui.res.R
+ 
+ /**
+  * A composable that displays the inline Power Menu.
+@@ -80,7 +84,7 @@ fun PowerMenu(
+                 modifier
+                     .padding(top = PowerMenuConstants.MenuTopPadding)
+                     .width(PowerMenuConstants.MenuWidth),
+-            shape = RoundedCornerShape(PowerMenuConstants.MenuCornerRadius),
++            shape = RoundedCornerShape(dimensionResource(R.dimen.qs_shape_panel_corner_radius)),
+         ) {
+             Column {
+                 viewModel.visibleActions.forEach { action -> key(action.key) { ActionRow(action) } }
+@@ -106,8 +110,12 @@ private fun ActionRow(viewModel: GlobalActionUiState.Visible, modifier: Modifier
+                 .padding(horizontal = PowerMenuConstants.ActionHorizontalPadding)
+                 .height(PowerMenuConstants.ActionHeight),
+     ) {
+-        Icon(viewModel.icon)
+-        Text(modifier = Modifier.basicMarquee(), text = stringResource(viewModel.textResId))
++        Icon(viewModel.icon, modifier = Modifier.size(20.dp))
++        Text(
++            modifier = Modifier.basicMarquee(),
++            text = stringResource(viewModel.textResId),
++            style = MaterialTheme.typography.bodyMedium,
++        )
+     }
+ }
+ 
+@@ -118,7 +126,12 @@ private object AnchorBottomEndProvider : PopupPositionProvider {
+         layoutDirection: LayoutDirection,
+         popupContentSize: IntSize,
+     ): IntOffset {
+-        val x = anchorBounds.right - popupContentSize.width
++        val x =
++            if (layoutDirection == LayoutDirection.Ltr) {
++                anchorBounds.right - popupContentSize.width
++            } else {
++                anchorBounds.left
++            }
+         val y = anchorBounds.bottom
+         return IntOffset(x, y)
+     }
+@@ -127,8 +140,7 @@ private object AnchorBottomEndProvider : PopupPositionProvider {
+ private object PowerMenuConstants {
+     val MenuWidth = 172.dp
+     val MenuTopPadding = 8.dp
+-    val MenuCornerRadius = 20.dp
+-    val ActionHeight = 44.dp
++    val ActionHeight = 48.dp
+     val ActionHorizontalPadding = 12.dp
+     val ActionIconTextSpacing = 12.dp
+ }
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/SecurityInfo.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/SecurityInfo.kt
+index 251c36eae773..949de83ae132 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/SecurityInfo.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/SecurityInfo.kt
+@@ -19,8 +19,8 @@ package com.android.systemui.qs.panels.ui.compose.toolbar
+ import androidx.compose.foundation.basicMarquee
+ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.size
+-import androidx.compose.foundation.shape.CircleShape
+ import androidx.compose.foundation.shape.CornerSize
++import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.LocalContentColor
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
+@@ -60,12 +60,19 @@ fun SecurityInfo(
+     CompositionLocalProvider(
+         value = LocalContentColor provides MaterialTheme.colorScheme.onSurface
+     ) {
++        val buttonCornerRadius = IconButtonDimensions.BackgroundCornerRadius
+         Expandable(
+             controller =
+-                rememberExpandableController(color = Color.Transparent, shape = CircleShape),
++                rememberExpandableController(
++                    color = Color.Transparent,
++                    shape = RoundedCornerShape(buttonCornerRadius),
++                ),
+             modifier =
+                 modifier
+-                    .borderOnFocus(color = MaterialTheme.colorScheme.secondary, CornerSize(0))
++                    .borderOnFocus(
++                        color = MaterialTheme.colorScheme.secondary,
++                        cornerSize = CornerSize(buttonCornerRadius),
++                    )
+                     .semantics {
+                         if (onClick != null) {
+                             role = Role.Button
+@@ -78,7 +85,7 @@ fun SecurityInfo(
+                 Icon(
+                     icon = viewModel.model.icon,
+                     modifier =
+-                        Modifier.minimumInteractiveComponentSize().size(24.dp).semantics {
++                        Modifier.minimumInteractiveComponentSize().size(20.dp).semantics {
+                             if (showCollapsed) {
+                                 contentDescription = viewModel.model.text
+                             }
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
+index fdcb46be5a59..bd37c4152262 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/TextFeedback.kt
+@@ -54,18 +54,18 @@ fun TextFeedback(viewModel: TextFeedbackViewModel, modifier: Modifier = Modifier
+                                 dimensionResource(R.dimen.qs_shape_toolbar_feedback_corner_radius)
+                             ),
+                     )
+-                    .height(36.dp)
++                    .height(32.dp)
+                     .padding(horizontal = 8.dp),
+         ) {
+             Icon(
+                 viewModel.model.icon,
+-                modifier = Modifier.size(16.dp),
++                modifier = Modifier.size(20.dp),
+                 tint = MaterialTheme.colorScheme.onSurface,
+             )
+             Text(
+                 text = viewModel.model.text,
+                 color = MaterialTheme.colorScheme.onSurface,
+-                style = MaterialTheme.typography.labelMedium,
++                style = MaterialTheme.typography.bodySmall,
+                 overflow = TextOverflow.Ellipsis,
+                 maxLines = 1,
+             )
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
+index dbf15f820fcd..ed5635bfd210 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/Toolbar.kt
+@@ -33,11 +33,11 @@ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.aspectRatio
++import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.requiredSize
+ import androidx.compose.foundation.layout.size
+ import androidx.compose.foundation.layout.sizeIn
+-import androidx.compose.foundation.layout.wrapContentSize
+-import androidx.compose.foundation.shape.CircleShape
+ import androidx.compose.foundation.shape.CornerSize
+ import androidx.compose.foundation.shape.RoundedCornerShape
+ import androidx.compose.material3.Icon
+@@ -194,9 +194,11 @@ private fun IconButton(
+     if (model == null) {
+         return
+     }
++    val buttonCornerRadius = IconButtonDimensions.BackgroundCornerRadius
++    val buttonShape = RoundedCornerShape(buttonCornerRadius)
+     Expandable(
+         color = Color.Unspecified,
+-        shape = CircleShape,
++        shape = buttonShape,
+         onClick = model.onClick,
+         modifier =
+             modifier
+@@ -206,8 +208,7 @@ private fun IconButton(
+                 )
+                 .semantics { role = Role.Button }
+                 .aspectRatio(1.0F)
+-                .borderOnFocus(MaterialTheme.colorScheme.secondary, CornerSize(percent = 50))
+-                .wrapContentSize(),
++                .borderOnFocus(MaterialTheme.colorScheme.secondary, CornerSize(buttonCornerRadius)),
+         useModifierBasedImplementation = true,
+     ) {
+         val protectionColor =
+@@ -216,20 +217,22 @@ private fun IconButton(
+             } else {
+                 Color.Transparent
+             }
+-        Box(
+-            modifier =
+-                Modifier.size(IconButtonDimensions.ColoredBackgroundSize)
+-                    .background(
+-                        color = protectionColor,
+-                        shape = RoundedCornerShape(IconButtonDimensions.BackgroundCornerRadius),
+-                    ),
+-            contentAlignment = Alignment.Center,
+-        ) {
+-            ToolbarIcon(
+-                icon = model.icon,
+-                modifier = Modifier.size(IconButtonDimensions.IconSize),
+-                tint = iconColor,
+-            )
++        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
++            Box(
++                modifier =
++                    Modifier.requiredSize(IconButtonDimensions.ColoredBackgroundSize)
++                        .background(
++                            color = protectionColor,
++                            shape = RoundedCornerShape(IconButtonDimensions.BackgroundCornerRadius),
++                        ),
++                contentAlignment = Alignment.Center,
++            ) {
++                ToolbarIcon(
++                    icon = model.icon,
++                    modifier = Modifier.size(IconButtonDimensions.IconSize),
++                    tint = iconColor,
++                )
++            }
+         }
+     }
+ }
+@@ -246,25 +249,19 @@ private fun PowerMenuToggleButton(
+             Color.Transparent
+         }
+ 
+-    val shape =
+-        RoundedCornerShape(
+-            topStart = PowerMenuToggleButtonConstants.DefaultCornerRadius,
+-            topEnd = PowerMenuToggleButtonConstants.DefaultCornerRadius,
+-            bottomStart = PowerMenuToggleButtonConstants.DefaultCornerRadius,
+-            bottomEnd =
+-                if (viewModel.isSelected) {
+-                    PowerMenuToggleButtonConstants.SelectedCornerRadius
+-                } else {
+-                    PowerMenuToggleButtonConstants.DefaultCornerRadius
+-                },
+-        )
++    val buttonCornerRadius = IconButtonDimensions.BackgroundCornerRadius
++    val shape = RoundedCornerShape(buttonCornerRadius)
+ 
+     val stateDescription = stringResource(viewModel.stateDescriptionRes)
+ 
+     Row(
+         modifier =
+             modifier
+-                .borderOnFocus(MaterialTheme.colorScheme.secondary, CornerSize(percent = 50))
++                .sizeIn(
++                    minHeight = IconButtonDimensions.MinimumSize,
++                    minWidth = IconButtonDimensions.MinimumSize,
++                )
++                .borderOnFocus(MaterialTheme.colorScheme.secondary, CornerSize(buttonCornerRadius))
+                 .clip(shape)
+                 .focusable()
+                 .clickable(role = Role.Button, onClick = viewModel.onClick)
+@@ -289,7 +286,11 @@ private fun PowerMenuToggleButton(
+                 MaterialTheme.colorScheme.onSurface
+             }
+ 
+-        Icon(icon = viewModel.icon, tint = fgColor)
++        Icon(
++            icon = viewModel.icon,
++            tint = fgColor,
++            modifier = Modifier.size(IconButtonDimensions.IconSize),
++        )
+ 
+         val chevronRotation by
+             animateFloatAsState(targetValue = viewModel.chevronRotation, label = "ChevronRotation")
+@@ -297,7 +298,10 @@ private fun PowerMenuToggleButton(
+         Icon(
+             icon = viewModel.chevron,
+             tint = fgColor,
+-            modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
++            modifier =
++                Modifier.size(IconButtonDimensions.IconSize).graphicsLayer {
++                    rotationZ = chevronRotation
++                },
+         )
+     }
+ }
+@@ -345,8 +349,6 @@ private object Toolbar {
+ }
+ 
+ private object PowerMenuToggleButtonConstants {
+-    val DefaultCornerRadius = 16.dp
+-    val SelectedCornerRadius = 4.dp
+     val PaddingStart = 8.dp
+     val PaddingEnd = 4.dp
+     val PaddingVertical = 4.dp
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+index 51a5bb1c3565..806664fbf9b6 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/panels/ui/compose/QuickSettingsTokenTest.kt
+@@ -88,19 +88,21 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+     }
+ 
+     @Test
+-    fun semanticShapes_keepSubtleStateDistinction() {
++    fun semanticShapes_useFluentControlGeometry() {
++        assertThat(dimensionDp(R.dimen.qs_shape_icon_active_corner_radius)).isEqualTo(4f)
+         assertThat(dimension(R.dimen.qs_shape_icon_active_corner_radius))
+-            .isLessThan(dimension(R.dimen.qs_shape_icon_inactive_corner_radius))
++            .isEqualTo(dimension(R.dimen.qs_shape_icon_inactive_corner_radius))
++        assertThat(dimensionDp(R.dimen.qs_shape_tile_active_corner_radius)).isEqualTo(4f)
+         assertThat(dimension(R.dimen.qs_shape_tile_active_corner_radius))
+-            .isLessThan(dimension(R.dimen.qs_shape_tile_inactive_corner_radius))
++            .isEqualTo(dimension(R.dimen.qs_shape_tile_inactive_corner_radius))
+     }
+ 
+     @Test
+     fun compactTileLayout_usesFoundationGeometry() {
+         assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
+ 
+-        assertThat(dimensionDp(R.dimen.qs_size_tile_icon_only_icon)).isEqualTo(28f)
+-        assertThat(dimensionDp(R.dimen.qs_size_tile_labeled_icon)).isEqualTo(24f)
++        assertThat(dimensionDp(R.dimen.qs_size_tile_icon_only_icon)).isEqualTo(20f)
++        assertThat(dimensionDp(R.dimen.qs_size_tile_labeled_icon)).isEqualTo(20f)
+         assertThat(dimensionDp(R.dimen.qs_spacing_tile_content)).isEqualTo(8f)
+         assertThat(dimensionDp(R.dimen.qs_spacing_tile_start)).isEqualTo(8f)
+         assertThat(dimensionDp(R.dimen.qs_spacing_tile_end)).isEqualTo(12f)
+@@ -111,12 +113,21 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+     fun compactChrome_usesFoundationGeometry() {
+         assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
+ 
+-        assertThat(dimensionDp(R.dimen.qs_shape_panel_corner_radius)).isEqualTo(28f)
+-        assertThat(dimensionDp(R.dimen.qs_shape_brightness_container_corner_radius)).isEqualTo(16f)
+-        assertThat(dimensionDp(R.dimen.qs_shape_edit_grid_corner_radius)).isEqualTo(20f)
++        assertThat(dimensionDp(R.dimen.qs_shape_panel_corner_radius)).isEqualTo(8f)
++        assertThat(dimensionDp(R.dimen.qs_shape_brightness_container_corner_radius)).isEqualTo(4f)
++        assertThat(dimensionDp(R.dimen.qs_shape_edit_grid_corner_radius)).isEqualTo(8f)
+         assertThat(dimensionDp(R.dimen.qs_shape_toolbar_button_background_corner_radius))
+-            .isEqualTo(10f)
+-        assertThat(dimensionDp(R.dimen.qs_shape_toolbar_feedback_corner_radius)).isEqualTo(10f)
++            .isEqualTo(4f)
++        assertThat(dimensionDp(R.dimen.qs_shape_toolbar_feedback_corner_radius)).isEqualTo(4f)
++        assertThat(dimensionDp(R.dimen.shade_panel_margin_horizontal)).isEqualTo(12f)
++        assertThat(dimensionDp(R.dimen.overlay_qs_layout_horizontal_padding)).isEqualTo(12f)
++        assertThat(dimensionDp(R.dimen.overlay_qs_layout_vertical_padding)).isEqualTo(12f)
++        assertThat(dimensionDp(R.dimen.overlay_qs_layout_brightness_icon_size)).isEqualTo(20f)
++        assertThat(dimensionDp(R.dimen.overlay_qs_layout_brightness_track_height)).isEqualTo(32f)
++        assertThat(dimensionDp(R.dimen.overlay_qs_layout_brightness_thumb_height)).isEqualTo(48f)
++        assertThat(dimensionDp(R.dimen.toolbar_button_colored_background_size)).isEqualTo(32f)
++        assertThat(dimensionDp(R.dimen.toolbar_button_icon_size)).isEqualTo(20f)
++        assertThat(dimensionDp(R.dimen.toolbar_button_size)).isEqualTo(48f)
+         assertThat(dimension(R.dimen.qs_shape_brightness_container_corner_radius))
+             .isLessThan(dimension(R.dimen.overlay_qs_layout_brightness_track_height) / 2f)
+         assertThat(dimension(R.dimen.qs_shape_toolbar_button_background_corner_radius))
+@@ -128,8 +139,8 @@ class QuickSettingsTokenTest : SysuiTestCase() {
+         assumeTrue(context.resources.configuration.smallestScreenWidthDp < 600)
+         val minimumTouchTarget = 48 * context.resources.displayMetrics.density
+ 
+-        assertThat(dimensionDp(R.dimen.common_tile_default_tile_height)).isEqualTo(72f)
+-        assertThat(dimensionDp(R.dimen.common_tile_default_toggle_target_size)).isEqualTo(56f)
++        assertThat(dimensionDp(R.dimen.common_tile_default_tile_height)).isEqualTo(56f)
++        assertThat(dimensionDp(R.dimen.common_tile_default_toggle_target_size)).isEqualTo(48f)
+         assertThat(dimension(R.dimen.common_tile_default_tile_height)).isAtLeast(minimumTouchTarget)
+         assertThat(dimension(R.dimen.common_tile_default_toggle_target_size))
+             .isAtLeast(minimumTouchTarget)
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt b/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
+index 04c3213e03b0..36de1624d05c 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
++++ b/packages/SystemUI/tests/src/com/android/systemui/qs/ui/composable/QuickSettingsShadeOverlayTest.kt
+@@ -118,14 +118,13 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+ 
+             composeTestRule.apply {
+                 // Verify the brightness slider's height.
+-                onNodeWithTag(resIdToTestTag("slider"))
+-                    .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 48.dp else 52.dp)
++                onNodeWithTag(resIdToTestTag("slider")).assertHeightIsEqualTo(48.dp)
+ 
+                 // Verify the brightness slider's vertical padding.
+                 val brightnessSliderNode = onNodeWithTag(resIdToTestTag("brightness_slider"))
+                 val sliderBoundsInRoot = brightnessSliderNode.getBoundsInRoot()
+                 val sliderContainerBoundsInRoot = brightnessSliderNode.onParent().getBoundsInRoot()
+-                val expectValue = if (DesktopSizing.isEnabled) 0.dp else 6.dp
++                val expectValue = if (DesktopSizing.isEnabled) 0.dp else 4.dp
+                 assertEquals(expectValue, sliderBoundsInRoot.top - sliderContainerBoundsInRoot.top)
+             }
+         }
+@@ -140,13 +139,11 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+             composeTestRule.setQSShadeOverlay()
+             composeTestRule.waitForIdle()
+ 
+-            composeTestRule
+-                .onNodeWithTag("element:airplane")
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 56.dp else 72.dp)
++            composeTestRule.onNodeWithTag("element:airplane").assertHeightIsEqualTo(56.dp)
+ 
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("qs_tile_icon"), useUnmergedTree = true)
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 24.dp else 28.dp)
++                .assertHeightIsEqualTo(20.dp)
+ 
+             // Verify the QS shade overlay's width.
+             composeTestRule
+@@ -165,13 +162,11 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+             composeTestRule.setQSShadeOverlay()
+             composeTestRule.waitForIdle()
+ 
+-            composeTestRule
+-                .onNodeWithTag("element:dnd")
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 56.dp else 72.dp)
++            composeTestRule.onNodeWithTag("element:dnd").assertHeightIsEqualTo(56.dp)
+ 
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("qs_tile_icon"), useUnmergedTree = true)
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 20.dp else 24.dp)
++                .assertHeightIsEqualTo(20.dp)
+         }
+ 
+     @Test
+@@ -185,12 +180,12 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+             // Verify the toolbar's height.
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("quick_settings_toolbar"))
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 36.dp else 48.dp)
++                .assertHeightIsEqualTo(48.dp)
+ 
+             // Verify the toolbar button's height.
+             composeTestRule
+                 .onNodeWithTag(resIdToTestTag("settings_button_container"))
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 36.dp else 40.dp)
++                .assertHeightIsEqualTo(48.dp)
+         }
+ 
+     @Test
+@@ -203,9 +198,7 @@ class QuickSettingsShadeOverlayTest : SysuiTestCase() {
+             composeTestRule.waitForIdle()
+ 
+             // Verify the slider's height. "Media" is the tag of the volume slider.
+-            composeTestRule
+-                .onNodeWithTag(resIdToTestTag("Media"))
+-                .assertHeightIsEqualTo(if (DesktopSizing.isEnabled) 48.dp else 52.dp)
++            composeTestRule.onNodeWithTag(resIdToTestTag("Media")).assertHeightIsEqualTo(48.dp)
+         }
+ 
+     @Test
+-- 
+2.53.0
+

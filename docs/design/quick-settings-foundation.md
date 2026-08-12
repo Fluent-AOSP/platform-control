@@ -2,9 +2,9 @@
 
 ## Scope
 
-M4 starts at the shared Android 17 Compose renderer. The first three batches establish semantic tile, layout, and chrome tokens. They do not change tile state production, color roles, icon assets, typography, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
+M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth uses those seams for a cohesive Windows 11-aligned composition. The work does not change tile state production, color-role ownership, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
-The design goal is a Fluent-inspired hierarchy adapted to Android: softly rounded rectangles with a subtle state-dependent radius change, not a literal WinUI surface and not fixed Windows colors.
+Windows 11 Quick Settings is the canonical visual reference. The Android implementation should be recognizably similar as a complete system—compact control geometry, flat split controls, restrained strokes, dense spacing, overlay materials, typography proportions, and motion—while retaining Android gestures, state production, security, accessibility, and adaptive layout.
 
 ## Android 17 implementation inventory
 
@@ -18,7 +18,8 @@ The design goal is a Fluent-inspired hierarchy adapted to Android: softly rounde
 | Shared tile content and dimensions | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/CommonTile.kt` |
 | Brightness container and focus outline | `frameworks/base/packages/SystemUI/src/com/android/systemui/brightness/ui/compose/BrightnessSlider.kt` |
 | Edit-grid chrome | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/infinitegrid/EditTile.kt` |
-| Toolbar chrome | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/` |
+| Scene-container toolbar chrome | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/toolbar/` |
+| Compatibility/scene footer actions | `frameworks/base/packages/SystemUI/compose/features/src/com/android/systemui/qs/footer/ui/compose/FooterActions.kt` |
 | Platform-to-Compose state adapter | `frameworks/base/packages/SystemUI/src/com/android/systemui/qs/panels/ui/viewmodel/TileUiState.kt` |
 | Compact-phone dimensions | `frameworks/base/packages/SystemUI/res/values/shade_dimens.xml` |
 | Large/desktop dimensions | `frameworks/base/packages/SystemUI/res/values-sw600dp/shade_dimens.xml` |
@@ -63,7 +64,25 @@ Normal tiles and resize-mode edit tiles share the new content-spacing token. Int
 | Toolbar protected background radius | circle | 10 dp | circle | 8 dp | Rounded-square decorative protection without changing button interaction geometry |
 | Toolbar feedback radius | pill | 10 dp | pill | 8 dp | Align transient non-interactive feedback with compact chrome |
 
-The brightness focus outline now uses the same corner token and horizontal/vertical frame expansion as the background it surrounds. Toolbar button hit targets, circular interaction/focus shapes, semantics, and click behavior remain unchanged; only the inner protected visual background changes. Compact and `sw600dp` values use parallel feature-flag-qualified aliases.
+The brightness focus outline now uses the same corner token and horizontal/vertical frame expansion as the background it surrounds. Toolbar button hit targets, semantics, and click behavior remain unchanged. Compact and `sw600dp` values use parallel feature-flag-qualified aliases.
+
+### Fourth implementation batch: Windows 11 alignment
+
+This batch supersedes the earlier exploratory radii while retaining their semantic resource seams.
+
+| Surface/token | Previous compact | Windows-aligned target | Contract |
+|---|---:|---:|---|
+| Tile and split-target radius | 16–20 dp | 4 dp | Windows persistent-control geometry; state moves to fill/stroke rather than shape |
+| Panel/edit overlay radius | 20–28 dp | 8 dp | Windows flyout/overlay geometry |
+| Compact panel gutter | 0 dp | 12 dp | Windows small-window gutter where the Android shade host permits floating layout |
+| Tile height | 72 dp | 56 dp | Denser Windows-like composition while remaining above 48 dp |
+| Split toggle target | 56 dp | 48 dp | Retain Android minimum target |
+| Tile glyphs | 24/28 dp | 20 dp | Windows system-control icon optics |
+| Brightness visual track/thumb | 40/52 dp | 32/48 dp | Compact bar treatment with a 48 dp interaction dimension |
+| Toolbar visual/icon/target | 36/24/48 dp | 32/20/48 dp | Small visible action with full Android target |
+| Tooltip/control/overlay radius | 16/varied/20+ dp | 4/4/8 dp | Consistent Windows geometry hierarchy |
+
+Active split tiles now use one full accent surface rather than a Material-style colored icon well. Inactive and unavailable split targets use transparent icon backgrounds so translucent dynamic surfaces are not composited twice; subtle `outlineVariant` strokes preserve state without restoring a separate well. Primary labels remain 14/20 semibold and secondary labels use the 12/16 regular body role, matching the Windows type ramp without redistributing Segoe. Edit actions, menus, power controls, and toolbar focus shapes follow the same 4/8 dp hierarchy. The compatibility host's independently rendered footer uses the same rounded rectangles, strokes, 20 dp icons, and 14/20 text while retaining 48 dp effective targets. All visible sizes remain separate from interaction and semantic bounds.
 
 ### Preserved Android tokens
 
@@ -72,11 +91,11 @@ The brightness focus outline now uses the same corner token and horizontal/verti
 | Active color | `MaterialTheme.colorScheme.primary` / `onPrimary` |
 | Inactive surfaces | `LocalAndroidColorScheme.surfaceEffect1` and `surfaceEffect2` |
 | Unavailable state | Existing surface/on-surface-variant alpha treatment |
-| Typography | Platform `titleSmallEmphasized` and `labelMedium` |
-| Tile height | 72 dp compact; existing qualified values elsewhere |
-| Toggle target | 56 dp compact; existing qualified values elsewhere |
+| Typography scaling/fallback | Platform scalable `titleSmallEmphasized` and `bodySmall` roles |
+| Tile height | 56 dp compact and large-screen |
+| Toggle target | 48 dp compact and large-screen |
 | State and accessibility | `QSTile.State` to `TileUiState` conversion |
-| Tooltip shape | Dedicated token preserving the upstream radius |
+| Tooltip shape | Dedicated 4 dp persistent-control token |
 
 No literal colors are introduced. Wallpaper-derived dynamic color, light/dark pairing, contrast behavior, and unavailable-state semantics remain Android-owned.
 
@@ -109,7 +128,13 @@ The expanded shape-plus-chrome reference is tracked at:
 - Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T093416Z`
 - Image SHA-256: `b1b7ca5b2821627bb0b22d8f3dbd816a22ecf6011cbf8dfafbb5313e40d85a3a`
 
-The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded reference additionally proves the resource-backed brightness container and full Quick Settings hierarchy while retaining platform-owned state colors and controls.
+The final Windows 11-aligned expanded reference is tracked at:
+
+- `docs/baselines/quick-settings/android17-windows11-fluent-expanded.png`
+- Source evidence: `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`
+- Image SHA-256: `f2aae20579b5b5f6e54ffd99faf038e03e8a7a03d6f85551770d87d09ac83a04`
+
+The compact images contain active Bluetooth/mobile data, inactive Wi-Fi, and unavailable Cast in one test-owned frame. The expanded references additionally prove the resource-backed brightness container, full Quick Settings hierarchy, and host-specific footer while retaining platform-owned state colors and controls.
 
 ## Validation contract
 
@@ -169,6 +194,24 @@ The first launch after product packaging normalized the generated `super.img` an
 
 The packaging launch again normalized only generated `super.img` and `userdata.img`; component partitions were unchanged. The accepted pair then used byte-identical source manifests and complete image checksum lists. Both pair members, plus the expanded-view gate run, passed UI, crash/ANR, bugreport, graceful-stop, and post-stop cleanliness checks.
 
+## Fourth-batch validation
+
+- AOSP commit: `e2210836149cee234211a39dc44e866bf0219650`
+- Parent: `9f67040d68f04f1dec7c347134fc7a18a2a232a7`
+- Exported patch: `patches/0006-frameworks-base-windows11-fluent-quick-settings.patch`
+- Patch SHA-256: `f14cb09530e6fc750b4a8085fca301686815d007532528dac0423bc813499d27`
+- Focused test evidence: `/home/azureuser/android-test-artifacts/systemui-qs-tests-20260812T100601Z`
+- Focused result: 87 discovered, 78 passed, 9 upstream configuration assumptions, 0 failed. This covered compact/large tokens, shared tile behavior and accessibility, edit mode, and shade overlay composition.
+- Final corrected-source compile: `/home/azureuser/android-test-artifacts/systemui-fluent-final-build-20260812T103333Z` (`SystemUI` and `SystemUITests`, commit `e2210836149c`).
+- Final incremental product build: `/home/azureuser/android-test-artifacts/aosp-build-20260812T104701Z`
+- Accepted identical-input Cuttlefish pair:
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105446Z`
+  - `/home/azureuser/android-test-artifacts/cuttlefish-20260812T105905Z`
+- Accepted source-manifest SHA-256: `b000f1b5c93786e33edea7884b7b92b32f85456b2ee260c4dd1b201f2154b431`
+- Accepted product-checksum-list SHA-256: `dd5351e31f6da35fe0a814381ff669c8d2323cce9933a87986ff7446006ce473`
+
+The first final-image launch exposed and corrected double-composited translucent icon wells and a host-specific Material footer path; that candidate image and build are superseded. The final packaging launch normalized only generated `super.img` and `userdata.img`, with every component partition unchanged. Runs two and three then used byte-identical complete inputs and both passed home, first-pull, expanded hierarchy/screenshot, crash/ANR, bugreport, graceful-stop, listener/process, and ADB cleanup gates. The verified expanded frame was delivered through the private Telegram channel as message 44.
+
 ## Batched follow-up work
 
-Further typography, header/footer spacing, detailed-view, motion, and configuration work will be grouped into materially larger coherent batches. Each batch uses one focused build/test cycle after editing, followed by one incremental product build and final runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.
+Acrylic/Mica approximation, detailed views, motion, large-screen runtime coverage, and configuration work will be grouped into materially larger coherent batches. Each batch uses focused build/test work while editing, followed by one final incremental product build and runtime validation. This avoids rebuilding product images after individual token changes while retaining the milestone evidence gates.

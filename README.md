@@ -1,6 +1,6 @@
 # Fluent on AOSP
 
-A control and documentation repository for adapting Microsoft Fluent Design to AOSP while retaining Android behavior. This is **not** a Windows skin and does not contain the AOSP checkout itself.
+A control and documentation repository for bringing a cohesive Microsoft Fluent visual system to AOSP while retaining Android behavior. Windows 11 is the canonical visual reference; the fork should look recognizably similar without replacing Android interaction or platform contracts. This repository does not contain the AOSP checkout itself.
 
 ## Baseline
 
@@ -18,10 +18,10 @@ The branch is a human-readable starting point, not a reproducibility guarantee. 
 
 ## Design stance
 
-- Translate Fluent through **semantic tokens**, not hard-coded colors or WinUI controls.
-- Keep Material You/dynamic-color role pairing and Android-native interaction contracts.
-- Preserve Roboto/system typography, scalable `sp`, 48 dp minimum targets, predictive back, insets, haptics, accessibility semantics, and adaptive layouts.
-- Treat Mica, desktop Acrylic, Segoe UI Variable, title bars, hover-first behavior, and Windows elevation numbers as Windows implementations—not portable requirements.
+- Use Windows 11 shell surfaces as the visual reference and implement them cohesively through **semantic tokens**, not scattered imitation or WinUI dependencies.
+- Keep Material You/dynamic-color role pairing and Android-native interaction contracts while matching Fluent geometry, density, hierarchy, strokes, typography proportions, materials, and motion.
+- Preserve scalable `sp`, locale fallback, 48 dp minimum targets, predictive back, insets, haptics, accessibility semantics, and adaptive layouts. Use only redistributable font/icon assets.
+- Reproduce the visual intent of Acrylic/Mica with Android-native blur, tint, and opaque fallbacks where appropriate; do not copy desktop title bars, hover-only behavior, or compositor APIs that do not translate.
 - Start with Quick Settings. Preserve its states, gestures, ordering, connectivity behavior, long-press actions, lockscreen rules, and accessibility.
 - Integrate settings into the relevant existing Settings categories. **Never create a fork-name, “Fluent,” or OS-specific catch-all menu.**
 
@@ -103,4 +103,4 @@ No script pushes or publishes. Only the explicit Telegram setup/notifier and doc
 
 ## Status
 
-M0 foundation and M1 source sync are complete: the upstream AOSP checkout is pinned by `manifests/aosp-android17.lock.xml`. A narrow, unit-tested Soong/Siso compatibility patch required for an external absolute `OUT_DIR` is retained under [`patches/`](patches/README.md) and recorded separately from that upstream lock. The earlier SDK bootstrap run proved basic KVM/ADB/screenshot mechanics but predates the current full evidence contract and is retained as legacy bring-up evidence. The current gate is M2: the first locked AOSP build, followed by the locally built Cuttlefish loop. See [ROADMAP.md](ROADMAP.md).
+M0–M3 are complete: the upstream AOSP checkout is revision-locked, the local product builds reproducibly through documented compatibility patches, and the same-build Cuttlefish evidence loop is stable. M4 has produced a validated Windows 11-aligned Quick Settings composition through local AOSP commit `e2210836149c`; the next batch adds the Windows-blue, cool-neutral Acrylic-like color/material hierarchy with safe opaque and reduced-transparency fallbacks. See [ROADMAP.md](ROADMAP.md), the [Quick Settings foundation](docs/design/quick-settings-foundation.md), and [`patches/`](patches/README.md).

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide defines the vocabulary and translation rules for a Fluent visual voice on Android. It is not a request to transplant Windows UI. Fluent 2's “natural on every platform” principle favors familiar native patterns; Android behavior and accessibility are the hard constraints.
+This guide defines the translation rules for a cohesive Fluent system on Android. Windows 11 shell surfaces are the canonical visual reference: the result should look recognizably similar in geometry, density, hierarchy, strokes, materials, typography proportions, and motion. Android behavior, accessibility, security, and adaptive-layout contracts remain hard constraints; WinUI code and desktop-only interaction models are not transplanted.
 
 “Material” here means current Material 3/Material You guidance. AOSP SystemUI is not necessarily implemented with the same library stack as an app using Material 3, so inspect the pinned Android 17 source before choosing an implementation seam.
 
@@ -13,7 +13,7 @@ This guide defines the vocabulary and translation rules for a Fluent visual voic
 | Natural on every platform | Adapt to device and native conventions; use familiar patterns for most experiences | Preserve Android navigation, controls, gestures, insets, haptics, adaptive behavior, semantics, and system settings |
 | Built for focus | Reduce clutter and emphasize the current task | Calm neutral hierarchy, purposeful spacing, fewer decorative dividers; do not cardify every row |
 | One for all, all for one | Inclusion is foundational | The stricter of Android accessibility and Fluent/WCAG guidance wins |
-| Unmistakably Microsoft | Use signature traits selectively | Restrained accent, coherent icon treatment, rhythm, and purposeful motion—not a wholesale Windows shell |
+| Unmistakably Microsoft | Create a coherent, recognizable Fluent identity | Use Windows 11 geometry, density, control strokes, surface layering, icon optics, typography hierarchy, and motion consistently—not as isolated decorative details |
 
 Sources: [Fluent design principles](https://fluent2.microsoft.design/design-principles), [Fluent accessibility](https://fluent2.microsoft.design/accessibility), [Android accessibility](https://developer.android.com/design/ui/mobile/guides/foundations/accessibility).
 
@@ -27,8 +27,8 @@ Fluent distinguishes raw/global tokens from semantic alias tokens. Material 3 al
 | Brand background/foreground/stroke | `primary`/`onPrimary` and container pairs | Reserve for selected/high-emphasis states; do not flood persistent surfaces with Microsoft blue |
 | Shared/status colors | error plus audited warning/success pairs | Status must not rely on hue alone; safety-critical Android conventions win |
 | Spacing aliases | `dp` resource/Compose dimensions | Use a 4 dp rhythm while retaining 48 dp hit targets |
-| Typography aliases | Android text appearances/Compose roles in `sp` | Use system Roboto and locale fallback; tune semantic hierarchy, not font identity |
-| Radius/stroke/elevation | Android shape and surface tokens | Map semantic levels, not web pixels or Windows shadow numbers |
+| Typography aliases | Android text appearances/Compose roles in `sp` | Match the Windows 11 12/16 and 14/20 regular/semibold hierarchy using scalable, redistributable fonts and complete locale fallback |
+| Radius/stroke/elevation | Android shape and surface tokens | Use Windows 11's 4 dp control and 8 dp overlay hierarchy as the starting point; adapt only where Android ergonomics require it |
 | Duration/easing | Android motion resources/specs | Preserve gesture continuity, predictive back, animator scale, and reduced-motion behavior |
 
 Sources: [Fluent design tokens](https://fluent2.microsoft.design/design-tokens), [Material color roles](https://m3.material.io/styles/color/roles), [AOSP Material You](https://source.android.com/docs/core/display/material).
@@ -51,7 +51,7 @@ Sources: [Fluent color](https://fluent2.microsoft.design/color), [Fluent color t
 
 **Material/Android:** display/headline/title/body/label roles, scalable `sp`, font-scale and locale fallback contracts.
 
-**Rule:** keep Roboto/system fonts. Never make Segoe a mandatory system font. Test 200% font scale, long translations, bold text, baselines, truncation, and screen-reader order.
+**Rule:** match Segoe UI Variable's hierarchy and openness with licensed, redistributable Android fonts; never redistribute Segoe without rights. Preserve locale fallback and scalable `sp`. Test 200% font scale, long translations, bold text, baselines, truncation, and screen-reader order.
 
 Sources: [Fluent typography](https://fluent2.microsoft.design/typography), [Android accessibility](https://developer.android.com/design/ui/mobile/guides/foundations/accessibility).
 
@@ -61,7 +61,7 @@ Sources: [Fluent typography](https://fluent2.microsoft.design/typography), [Andr
 
 **Android:** density-independent dimensions, window size classes, edge-to-edge insets, cutouts, fold posture, and at least 48 dp interactive targets.
 
-**Rule:** translate intent to `dp`/`sp`; do not copy web pixels. Visible icons may be smaller than their hit target. Use Android breakpoints and preserve compact, split-screen, landscape, foldable, desktop/freeform, and external-input behavior.
+**Rule:** Windows effective pixels map naturally to Android `dp` for the visual baseline. Keep the 4 dp rhythm, 12 dp compact gutters, and small visible controls while preserving at least 48 dp hit targets. Use Android breakpoints and preserve compact, split-screen, landscape, foldable, desktop/freeform, and external-input behavior.
 
 Sources: [Fluent layout](https://fluent2.microsoft.design/layout), [Android adaptive layouts](https://developer.android.com/design/ui/mobile/guides/layout-and-content/adapt-layout).
 
@@ -71,9 +71,9 @@ Sources: [Fluent layout](https://fluent2.microsoft.design/layout), [Android adap
 
 **Material/Android:** a larger shape scale and familiar pills, circles, sheets, dialogs, switches, sliders, and tiles.
 
-**Rule:** use restrained, coherent geometry without forcing Windows 4 px rectangles. Keep circular dial keys and recognizable Android controls. A beak is appropriate only when an anchored teaching popover actually needs one.
+**Rule:** use the Windows 11 geometry hierarchy directly where the component role matches: 4 dp for persistent controls and bars, 8 dp for flyouts, dialogs, and overlay containers, and 0 dp where adjoining straight edges meet. Keep circles only for genuinely circular metaphors or controls. Android touch bounds may exceed the visible geometry.
 
-Source: [Fluent shapes](https://fluent2.microsoft.design/shapes).
+Sources: [Windows 11 geometry](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/geometry), [Fluent shapes](https://fluent2.microsoft.design/shapes).
 
 ### Depth and elevation
 
@@ -113,18 +113,18 @@ Microsoft's Fluent Android library is an evolving subset designed to coexist wit
 
 Source: [Fluent Android components](https://fluent2.microsoft.design/components/android).
 
-## Material categories and the Windows boundary
+## Windows 11 materials on Android
 
-Fluent names solid, Acrylic, Mica, and smoke materials. Their intent is not a mandate to reproduce Windows compositor effects.
+Fluent names solid, Acrylic, Mica, and smoke materials. Their visible hierarchy is part of the target; Android implements equivalent intent with its own blur, tint, scrim, dynamic-color, privacy, and performance mechanisms.
 
 | Material/effect | Portable intent | Android policy |
 |---|---|---|
-| Solid | Reliable opaque surface and hierarchy | Default. Use dynamic tonal surfaces |
+| Solid | Reliable opaque surface and hierarchy | Opaque fallback and accessibility baseline using dynamic tonal surfaces |
 | Smoke | Modal separation/dimming | Map to Android's standard modal scrim and dismissal behavior |
-| Acrylic | Transient frosted context | Optional experiment only on a transient light-dismiss surface; require opaque fallback, contrast/privacy tests, reduced-transparency response, battery and frame gates |
-| Mica | Windows 11 wallpaper-tinted window backdrop with active/inactive behavior | **Windows-only implementation. Do not claim a port.** Android dynamic color addresses personalization through native semantics |
+| Acrylic | Transient frosted context | Use Android background blur plus tint for transient light-dismiss surfaces when supported; require opaque, reduced-transparency, privacy, battery, and frame fallbacks |
+| Mica | Wallpaper-tinted persistent backdrop | Approximate the visual relationship with Android dynamic color and subtle tonal layering; do not claim Windows compositor behavior |
 
-Also Windows-specific/nonportable: Segoe UI Variable as a mandatory system font, title bars, NavigationView/command bars, desktop hover-first state design, WinUI controls, Windows shadow numbers, and literal desktop corner metrics.
+Desktop title bars, NavigationView/command bars, hover-only state design, WinUI control state machines, and Windows compositor APIs remain nonportable. Their appearance can guide equivalent Android surfaces without importing their behavior.
 
 Sources: [Fluent material](https://fluent2.microsoft.design/material), [Windows materials](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/materials), [Windows Acrylic](https://learn.microsoft.com/en-us/windows/apps/design/style/acrylic), [Windows Mica](https://learn.microsoft.com/en-us/windows/apps/design/style/mica).
 
@@ -134,7 +134,7 @@ Sources: [Fluent material](https://fluent2.microsoft.design/material), [Windows 
 
 Preserve collapsed/expanded states, tile ordering/editing, Internet/connectivity behavior, status semantics, long-press destinations, shade gestures, haptics, notifications/media relationships, cutouts/insets, lockscreen privacy, and accessibility actions.
 
-Start with semantic tokens for neutral surfaces, active/selected emphasis, unavailable state, 4 dp rhythm, Android-native rounded geometry, and consistent Fluent icon optics. Validate state without color, dynamic wallpaper/contrast combinations, TalkBack, 48 dp targets, RTL, landscape/large screens, and frame performance. Solid/tonal surfaces are the baseline.
+Start with semantic tokens for neutral surfaces, full-control active emphasis, subtle inactive strokes, unavailable state, 4 dp control/8 dp overlay geometry, 12 dp compact gutters, dense 56 dp visible tiles over 48 dp minimum targets, and consistent Fluent icon optics. Use transient blur/tint when the platform supports it and retain an opaque fallback. Validate state without color, dynamic wallpaper/contrast combinations, TalkBack, RTL, landscape/large screens, and frame performance.
 
 AOSP landmarks: `frameworks/base/packages/SystemUI/` and dynamic-color consumers around `ThemeOverlayController`; exact Android 17 seams must be inventoried before editing. See [AOSP connectivity UI](https://source.android.com/docs/core/connect/connectivity-ui).
 

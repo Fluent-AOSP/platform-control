@@ -81,6 +81,24 @@ and touch-target dimensions remain unchanged. Applying the patch produces local
 commit `9f67040d68f04f1dec7c347134fc7a18a2a232a7`; the patch SHA-256 is
 `af32d1bb42f434556740a0edced54f3bf460f74136954ff9a447c62c44ca7658`.
 
+## Windows 11 Fluent Quick Settings composition
+
+`0006-frameworks-base-windows11-fluent-quick-settings.patch` applies after patch
+0005, at local `frameworks/base` revision
+`9f67040d68f04f1dec7c347134fc7a18a2a232a7`.
+
+The patch aligns the shared Quick Settings renderer and both footer/toolbar host
+paths with Windows 11 as the canonical visual reference. It establishes 4 dp
+persistent-control and 8 dp overlay geometry, 12 dp compact gutters, dense 56 dp
+tiles over 48 dp targets, 20 dp icon optics, full-surface active emphasis, flat
+inactive split targets with subtle dynamic strokes, a compact brightness
+container, and Windows-like type proportions. Edit, tooltip, security, feedback,
+settings, and power surfaces use the same hierarchy. Android owns state
+production, dynamic role pairing, gestures, slider behavior, editing, lockscreen
+policy, accessibility semantics, and adaptive layout. Applying the patch produces
+local commit `e2210836149cee234211a39dc44e866bf0219650`; the patch SHA-256 is
+`f14cb09530e6fc750b4a8085fca301686815d007532528dac0423bc813499d27`.
+
 Apply to a clean locked checkout:
 
 ```bash
@@ -97,6 +115,8 @@ test "$(git rev-parse HEAD)" = 7a6ec03afcd84148e966a65eba74330967d012f2
 git am /home/azureuser/fluent-aosp/patches/0004-frameworks-base-quick-settings-layout-tokens.patch
 test "$(git rev-parse HEAD)" = a25ecd17bfee2711fc3194d396d4de6f225632df
 git am /home/azureuser/fluent-aosp/patches/0005-frameworks-base-quick-settings-chrome-shapes.patch
+test "$(git rev-parse HEAD)" = 9f67040d68f04f1dec7c347134fc7a18a2a232a7
+git am /home/azureuser/fluent-aosp/patches/0006-frameworks-base-windows11-fluent-quick-settings.patch
 ```
 
 The resulting local commits are expected to be recorded by the build evidence's
