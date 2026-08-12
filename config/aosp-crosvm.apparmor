@@ -1,0 +1,11 @@
+# Permit the approved locally built Cuttlefish crosvm binary to create its
+# minijail user/mount namespace while retaining Ubuntu's global restriction.
+abi <abi/5.0>,
+include <tunables/global>
+
+profile aosp-crosvm /home/azureuser/aosp-out/host/linux-x86/bin/x86_64-linux-gnu/crosvm flags=(unconfined) {
+  userns,
+  @{exec_path} mr,
+
+  include if exists <local/aosp-crosvm>
+}

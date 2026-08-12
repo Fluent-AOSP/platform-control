@@ -62,6 +62,7 @@ Cuttlefish groups `kvm`, `cvdnetwork`, and `render` include `azureuser`. New log
 9. Re-ran preflight in a fresh login context after group changes: all 22 original checks passed, including KVM open and Emulator acceleration.
 10. The first full product compilation reached 84% before a Trusty action proved that Ubuntu's fallback `unprivileged_userns` AppArmor profile denied `nsjail` mount setup. Installed the narrowly scoped profile retained at `config/aosp-nsjail.apparmor`, loaded it with `apparmor_parser`, and verified the exact Soong sandbox probe succeeds. The global `kernel.apparmor_restrict_unprivileged_userns=1` policy remains enabled. Preflight now includes this probe when the source-provided binary exists.
 11. Enabling the sandbox exposed further Android 17 command generation that prepends `$PWD` to an absolute external output path. Kept physical output at `/home/azureuser/aosp-out`, but standardized AOSP's path spelling as relative `OUT_DIR=out-fluent` through a validated `/mnt/aosp/out-fluent` symlink. Build and Cuttlefish scripts create the alias only when absent and reject mismatched/existing non-symlink paths.
+12. The first locally built Cuttlefish launch then proved that its same-build `crosvm` executable also needs an unprivileged user/mount namespace. Kernel audit records showed transition to Ubuntu's restrictive fallback profile followed by denied `CAP_SYS_ADMIN`. Added the exact-output-path `config/aosp-crosvm.apparmor` profile; it grants `userns` only to `/home/azureuser/aosp-out/host/linux-x86/bin/x86_64-linux-gnu/crosvm`.
 
 Legacy bootstrap evidence: `/home/azureuser/android-test-artifacts/bootstrap-20260811T152831Z`
 
@@ -92,10 +93,12 @@ Current-contract SDK evidence: `/home/azureuser/android-test-artifacts/sdk-emula
 
   ```bash
   sudo install -o root -g root -m 0644 config/aosp-nsjail.apparmor /etc/apparmor.d/aosp-nsjail
+  sudo install -o root -g root -m 0644 config/aosp-crosvm.apparmor /etc/apparmor.d/aosp-crosvm
   sudo apparmor_parser -r /etc/apparmor.d/aosp-nsjail
+  sudo apparmor_parser -r /etc/apparmor.d/aosp-crosvm
   ```
 
-  The profile path assumes the approved `/mnt/aosp` source location and must be reviewed if `AOSP_ROOT` changes.
+  The profile paths assume the approved source and output locations and must be reviewed if `AOSP_ROOT` or physical `OUT_DIR` changes.
 
 ## Read-only recheck
 
