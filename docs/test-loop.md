@@ -37,7 +37,7 @@ Provide a closed, deterministic-enough loop for booting Android, exercising UI, 
 - Lunch: `aosp_cf_x86_64_only_phone-aosp_current-userdebug`.
 - Host tools: use `$ANDROID_HOST_OUT/bin` from the same build that produced `$ANDROID_PRODUCT_OUT`; never let a stale downloaded host bundle win in `PATH`.
 - Runtime home: unique to the run so stop/reset commands address only that run.
-- Serial: derived from the locked instance (`127.0.0.1:` plus `6520 + instance - 1`), checked for pre-existing listeners/transports, and verified against the generated owned Cuttlefish configuration after launch. Clean-stop probing permits rebinding stale `TIME_WAIT` tuples but remains blocked by an actual listener.
+- Serial: derived from the locked instance (`127.0.0.1:` plus `6520 + instance - 1`), checked for pre-existing listeners/transports, and verified against the generated owned Cuttlefish configuration after launch. Clean-stop probing permits rebinding stale `TIME_WAIT` tuples but remains blocked by an actual listener; cleanup disconnects and verifies both ADB aliases for only the prevalidated owned port.
 - Scope: acceptance runtime for every UI change.
 
 Do not depend on an unattended “latest” Cuttlefish CI artifact downloader. No such downloader is checked in. If a prebuilt bundle is ever approved, mirror a human-selected image and matching host package with identical build ID and checksums; the baseline script deliberately uses only same-build local images and host tools.

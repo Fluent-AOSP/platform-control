@@ -157,7 +157,7 @@ PY
 }
 
 stop_owned_cuttlefish() {
-  local stop_status=0 deadline
+  local stop_status=0 deadline owned_serial
   [[ "$launched" == 1 ]] || return 0
   if timeout "$STOP_TIMEOUT" env HOME="$cvd_home" "$stop_cvd_bin" \
       >"$run_dir/cuttlefish-stop.txt" 2>&1; then
@@ -174,6 +174,17 @@ stop_owned_cuttlefish() {
   done
   if ! cuttlefish_port_is_free; then
     printf 'owned Cuttlefish ADB port remained in use after stop\n' >>"$run_dir/cuttlefish-stop.txt"
+    stop_status=1
+  fi
+  # launch_cvd and the explicit connect can register both aliases. They were
+  # proven absent before launch, so disconnect only this run's exact port.
+  for owned_serial in "127.0.0.1:$expected_adb_port" "0.0.0.0:$expected_adb_port"; do
+    "$adb_bin" disconnect "$owned_serial" >>"$run_dir/cuttlefish-stop.txt" 2>&1 || stop_status=1
+  done
+  if "$adb_bin" devices | awk -v suffix=":$expected_adb_port" \
+      '$1 ~ (suffix "$") {found=1} END {exit !found}'; then
+    printf 'owned Cuttlefish ADB transport remained registered after disconnect\n' \
+      >>"$run_dir/cuttlefish-stop.txt"
     stop_status=1
   fi
   launched=0

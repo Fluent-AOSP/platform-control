@@ -96,6 +96,7 @@ grep -Fq -- '--no-use-superproject' scripts/aosp-init-sync.sh
 grep -Fq 'display_size=' scripts/lib/common.sh
 grep -Fq 'package="com.android.systemui"' scripts/lib/common.sh
 grep -Fq 'socket.SO_REUSEADDR' scripts/cuttlefish-smoke.sh
+grep -Fq 'owned Cuttlefish ADB transport remained registered after disconnect' scripts/cuttlefish-smoke.sh
 for signal_script in scripts/aosp-init-sync.sh scripts/aosp-build.sh; do
   grep -Fq "trap 'exit 130' INT" "$signal_script"
   grep -Fq "trap 'exit 143' TERM" "$signal_script"
