@@ -293,6 +293,10 @@ capture_ui_smoke() {
         && ! cmp -s "$run_dir/quick-settings.png" "$run_dir/quick-settings-expanded.png" \
         && grep -Fq 'package="com.android.systemui"' "$run_dir/expanded-window.xml" \
         && grep -Fq 'resource-id="com.android.systemui:id/brightness_slider"' \
+          "$run_dir/expanded-window.xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/volume_slider"' \
+          "$run_dir/expanded-window.xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/qs_footer_actions"' \
           "$run_dir/expanded-window.xml"; then
       expanded_ready=1
       break
@@ -302,12 +306,75 @@ capture_ui_smoke() {
     sleep 2
   done
   if [[ "$expanded_ready" != 1 ]]; then
-    printf 'Expanded Quick Settings visual and toolbar hierarchy gates failed after three attempts\n' \
+    printf 'Expanded Quick Settings visual, rail, and footer hierarchy gates failed after three attempts\n' \
       >"$run_dir/ui-state-validation.txt"
     return 1
   fi
 
-  printf 'PASS display=%sx%s swipe=%s,%s-%s,%s hierarchy=com.android.systemui expanded=true\n' \
+  # Cuttlefish can capture the transient edit education tooltip before it times out. Move the
+  # virtual pointer outside the shade content, then require the expanded hierarchy to remain intact
+  # before recording the representative screenshot.
+  if grep -Fq 'text="Resize Quick Settings tiles"' "$run_dir/expanded-window.xml"; then
+    local dismiss_y=$((height * 57 / 100)) stable_xml="$run_dir/expanded-window-stable.xml"
+    printf 'dismissing=resize-education-tooltip mouse=%s,%s-%s,%s\n' \
+      "$swipe_x" "$dismiss_y" 1 "$((height - 1))" >>"$run_dir/statusbar-command.txt"
+    adb_for "$adb_bin" "$serial" shell input mouse swipe \
+      "$swipe_x" "$dismiss_y" 1 "$((height - 1))" 200
+    sleep 2
+    adb_for "$adb_bin" "$serial" shell rm -f /sdcard/expanded-window-stable.xml \
+      >/dev/null 2>&1 || true
+    if adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/expanded-window-stable.xml \
+        >>"$run_dir/expanded-uiautomator.txt" 2>&1 \
+        && adb_for "$adb_bin" "$serial" pull /sdcard/expanded-window-stable.xml "$stable_xml" \
+          >>"$run_dir/expanded-adb-pull-ui.txt" 2>&1 \
+        && [[ -s "$stable_xml" ]] \
+        && ! grep -Fq 'text="Resize Quick Settings tiles"' "$stable_xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/brightness_slider"' "$stable_xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/volume_slider"' "$stable_xml" \
+        && grep -Fq 'resource-id="com.android.systemui:id/qs_footer_actions"' "$stable_xml"; then
+      mv -- "$stable_xml" "$run_dir/expanded-window.xml"
+      adb_for "$adb_bin" "$serial" exec-out screencap -p \
+        >"$run_dir/quick-settings-expanded.png"
+    else
+      printf 'resize education tooltip dismissal did not preserve the expanded hierarchy\n' \
+        >"$run_dir/ui-state-validation.txt"
+      return 1
+    fi
+  fi
+
+  local pager_y=$((height * 34 / 100)) pager_start_x=$((width * 5 / 6))
+  local pager_end_x=$((width / 6)) page_two_xml="$run_dir/expanded-page-two-window.xml"
+  printf 'pager_swipe=%s,%s-%s,%s\n' \
+    "$pager_start_x" "$pager_y" "$pager_end_x" "$pager_y" >>"$run_dir/statusbar-command.txt"
+  adb_for "$adb_bin" "$serial" shell input swipe \
+    "$pager_start_x" "$pager_y" "$pager_end_x" "$pager_y" 500
+  sleep 2
+  adb_for "$adb_bin" "$serial" exec-out screencap -p \
+    >"$run_dir/quick-settings-expanded-page-two.png"
+  adb_for "$adb_bin" "$serial" shell rm -f /sdcard/expanded-page-two-window.xml \
+    >/dev/null 2>&1 || true
+  if ! adb_for "$adb_bin" "$serial" shell uiautomator dump /sdcard/expanded-page-two-window.xml \
+      >>"$run_dir/expanded-uiautomator.txt" 2>&1 \
+      || ! adb_for "$adb_bin" "$serial" pull /sdcard/expanded-page-two-window.xml "$page_two_xml" \
+        >>"$run_dir/expanded-adb-pull-ui.txt" 2>&1 \
+      || [[ ! -s "$page_two_xml" ]] \
+      || ! grep -Fq 'resource-id="com.android.systemui:id/qs_pager"' "$page_two_xml" \
+      || cmp -s "$run_dir/quick-settings-expanded.png" \
+        "$run_dir/quick-settings-expanded-page-two.png"; then
+    printf 'Expanded Quick Settings pager did not produce a verified second page\n' \
+      >"$run_dir/ui-state-validation.txt"
+    return 1
+  fi
+
+  printf 'pager_restore=%s,%s-%s,%s\n' \
+    "$pager_end_x" "$pager_y" "$pager_start_x" "$pager_y" >>"$run_dir/statusbar-command.txt"
+  adb_for "$adb_bin" "$serial" shell input swipe \
+    "$pager_end_x" "$pager_y" "$pager_start_x" "$pager_y" 500
+  sleep 2
+  adb_for "$adb_bin" "$serial" exec-out screencap -p \
+    >"$run_dir/quick-settings-expanded.png"
+
+  printf 'PASS display=%sx%s swipe=%s,%s-%s,%s hierarchy=com.android.systemui expanded=true rails=brightness,volume footer=true pager=verified\n' \
     "$width" "$height" "$swipe_x" "$swipe_start" "$swipe_x" "$swipe_end" \
     >"$run_dir/ui-state-validation.txt"
 
