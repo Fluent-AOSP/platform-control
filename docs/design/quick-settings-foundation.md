@@ -2,7 +2,7 @@
 
 ## Scope
 
-> **Normative policy:** all new work follows the [Fluent AOSP implementation standard](fluent-implementation-standard.md). The validation sections below retain snapshot-era source IDs as historical evidence. After the full-history/authorship migration, their equivalent full-history commits are the `Historical local commit` IDs shown in each batch; the current Fluent branch head is `9f0e6acdc0353da1b32b7868378e7c4908779d4a`.
+> **Normative policy:** all new work follows the [Fluent AOSP implementation standard](fluent-implementation-standard.md). The validation sections below retain snapshot-era source IDs as historical evidence. After the full-history/authorship migration, their equivalent full-history commits are the `Historical local commit` IDs shown in each batch; the current Fluent branch head is `30634ab7b94629146d13f2b5ac97cb5b5dd71c6f`.
 
 M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth added a scoped Windows-blue and cool-neutral color/material system; the sixth extends that system to the panel and brightness control. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
@@ -10,12 +10,12 @@ Windows 11 Quick Settings is the canonical visual reference. The Android impleme
 
 ## Current full-history head status
 
-Current published source: `9f0e6acdc0353da1b32b7868378e7c4908779d4a`.
+Current published source: `30634ab7b94629146d13f2b5ac97cb5b5dd71c6f`.
 
 Status terms are intentionally separate:
 
-- **Implemented/published:** expanded composition, curated icons, scoped optional Segoe family, Acrylic roles, split controls, brightness/volume rails, and mute/level volume artwork are present in the published source.
-- **Compiled:** an exact-head `OUT_DIR=out-fluent m SystemUI -j8` completed successfully during the publication session. No standalone build-log artifact was retained, so this is an attested compile rather than archived build evidence.
+- **Implemented/published:** expanded composition, curated icons, scoped optional Segoe family, Acrylic roles, split controls, brightness/volume rails, mute/level volume artwork, and the separate phone-collapsed first-four-control composition are present in the published source. Collapsed transparency is restricted to unlocked phone portrait when the shade-blur flag and runtime blur support are both active; landscape, `sw600dp`, protected, and no-blur states retain platform or opaque scrims.
+- **Compiled:** an exact-head `OUT_DIR=out-fluent m SystemUI -j8` completed successfully. Archived build evidence is `/home/azureuser/android-test-artifacts/collapsed-qqs-aligned-predicate-build-20260814T125044Z/`.
 - **Runtime-smoke verified:** the exact public-source APK was hot-deployed after provisioning the optional font only on the private test device. The dark expanded screenshot is `/home/azureuser/android-test-artifacts/fast-iteration-cvd/cycle-pushed-device-segoe-18-dark/quick-settings-expanded-dark.png`; its targeted failure scan is empty at `failure-signals.txt` in the same directory.
 - **Reviewed:** the final license and medium-weight fixes received independent review with no remaining Blocker or High finding. This review did not replace full SystemUI test or product validation.
 - **Not yet finally accepted:** focused exact-head tests, product build, full adaptive/accessibility/fallback matrix, clean same-input Cuttlefish pair, and fresh-checkout validation remain required.
