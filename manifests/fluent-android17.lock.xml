@@ -1065,7 +1065,7 @@
   <project name="platform/tools/tradefederation/prebuilts" path="tools/tradefederation/prebuilts" revision="cff1e97158caa95de4919a38abf6f3ac10409f37" upstream="android17-release" dest-branch="android17-release" groups="pdk,tradefed" clone-depth="1"/>
   <project name="platform/tools/treble" path="tools/treble" revision="07f855c5b283a77b04617322aea8990d9d3cdf52" upstream="android17-release" dest-branch="android17-release" groups="tools,pdk"/>
   <project name="platform/tools/trebuchet" path="tools/trebuchet" revision="fb475730e55c847362a51b1978b16a633267deb9" upstream="android17-release" dest-branch="android17-release" groups="tools,cts,pdk,pdk-cw-fs,pdk-fs"/>
-  <project name="platform_build_soong" path="build/soong" remote="fluent" revision="3b268e97c0b2ae7174fb81e72328a768878c34cb" upstream="fluent-android17" dest-branch="fluent-android17" groups="pdk,tradefed,sysui-studio">
+  <project name="platform_build_soong" path="build/soong" remote="fluent" revision="8f3143cbb6b68c90004f13b34f28b27d07a81cc8" upstream="fluent-android17" dest-branch="fluent-android17" groups="pdk,tradefed,sysui-studio">
     <linkfile src="root.bp" dest="Android.bp"/>
     <linkfile src="bootstrap.bash" dest="bootstrap.bash"/>
   </project>
