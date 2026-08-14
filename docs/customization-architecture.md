@@ -7,7 +7,7 @@ Create a recognizable Fluent visual voice with the smallest maintainable delta f
 ## Layering
 
 1. **Upstream Android roles and behavior**
-   - Keep Monet/dynamic palette generation, Android semantic color pairs, component state machines, accessibility semantics, navigation, gestures, haptics, and window/inset logic.
+   - Keep Monet/dynamic palette generation, Android semantic color pairing, component state machines, accessibility semantics, navigation, gestures, haptics, and window/inset logic. The approved Quick Settings theme is a scoped exception that consumes fixed audited light/dark accent pairs; it does not replace platform palette generation or relax foreground/container pairing elsewhere.
 2. **Fluent semantic alias layer**
    - Define aliases for neutral/brand/status foregrounds and containers, typography hierarchy, spacing, shape, stroke, elevation level, icon optical size, and motion.
    - Map aliases to Android roles rather than raw global values.

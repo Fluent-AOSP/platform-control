@@ -1,7 +1,10 @@
 # ADR 0002: Publish modified AOSP projects as source repositories
 
-- Status: Accepted
+- Status: Superseded in part by ADR 0003
 - Date: 2026-08-12
+- Superseded scope: the snapshot-root/bounded-history model; independent repositories and exact manifest pinning remain accepted
+
+> **Current policy:** follow [ADR 0003](0003-full-history-independent-repositories.md). Modified AOSP repositories are independent, non-fork repositories with complete upstream history. The snapshot-root passages below are retained as historical context only.
 
 ## Context
 
@@ -9,7 +12,7 @@ The initial bring-up kept the upstream revision lock unchanged and exported ever
 
 The public `aosp-mirror` GitHub organization is archived and is not an acceptable source dependency for this project. Android Gitiles remains the authoritative upstream.
 
-## Decision
+## Historical decision (snapshot-history portion superseded)
 
 Each modified AOSP project is published as an independent public repository in the `Fluent-AOSP` organization. Repository names follow the AOSP path convention, for example:
 
@@ -23,7 +26,7 @@ Repositories are not forks of `aosp-mirror`. Their root commit is an exact tree 
 
 `platform-control` remains the compact control plane for automation, architecture records, test policy, and accepted visual evidence. Ordered patch files are no longer an active source-delivery mechanism. Historical patch artifacts remain available in Git history but are removed from the current tree to prevent two competing sources of truth.
 
-## Update workflow
+## Historical update workflow (superseded by ADR 0003)
 
 1. Fetch the reviewed upstream commit directly from Android Gitiles.
 2. Record or update the exact upstream snapshot provenance.
@@ -32,7 +35,7 @@ Repositories are not forks of `aosp-mirror`. Their root commit is an exact tree 
 5. Pin accepted commit IDs in `Fluent-AOSP/android/default.xml`.
 6. Export and review `manifests/fluent-android17.lock.xml` in `platform-control`.
 
-## Consequences
+## Historical consequences
 
 - Contributors clone and review ordinary project repositories instead of applying a growing patch series.
 - Cross-project changes use a manifest commit to bind the exact compatible set.

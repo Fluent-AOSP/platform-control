@@ -14,23 +14,25 @@ A control and documentation repository for bringing a cohesive Microsoft Fluent 
 | Bootstrap/fallback | SDK Emulator, API 36 `default;x86_64` |
 | Source / output | `/mnt/aosp` / `/home/azureuser/aosp-out` |
 
-The branch is a human-readable starting point, not a reproducibility guarantee. Builds use the exact revisions in the Fluent manifest and exported lock. See [ADR 0001](docs/adr/0001-aosp-baseline.md) and [ADR 0002](docs/adr/0002-project-repositories.md).
+The branch is a human-readable starting point, not a reproducibility guarantee. Builds use the exact revisions in the Fluent manifest and exported lock. See [ADR 0001](docs/adr/0001-aosp-baseline.md), the historical repository decision in [ADR 0002](docs/adr/0002-project-repositories.md), and the current full-history/non-fork policy in [ADR 0003](docs/adr/0003-full-history-independent-repositories.md).
 
 ## Design stance
 
 - Use Windows 11 shell surfaces as the visual reference and implement them cohesively through **semantic tokens**, not scattered imitation or WinUI dependencies.
-- Keep Material You/dynamic-color role pairing and Android-native interaction contracts while matching Fluent geometry, density, hierarchy, strokes, typography proportions, materials, and motion.
+- Keep Android-owned dynamic palette generation and semantic role pairing while matching Fluent geometry, density, hierarchy, strokes, typography proportions, materials, and motion. The approved Quick Settings scope deliberately consumes fixed audited light/dark accent roles through its own semantic theme; this exception does not disable platform palette generation globally.
 - Preserve scalable `sp`, locale fallback, 48 dp minimum targets, predictive back, insets, haptics, accessibility semantics, and adaptive layouts. Use only redistributable font/icon assets.
 - Reproduce the visual intent of Acrylic/Mica with Android-native blur, tint, and opaque fallbacks where appropriate; do not copy desktop title bars, hover-only behavior, or compositor APIs that do not translate.
 - Start with Quick Settings. Preserve its states, gestures, ordering, connectivity behavior, long-press actions, lockscreen rules, and accessibility.
 - Integrate settings into the relevant existing Settings categories. **Never create a fork-name, “Fluent,” or OS-specific catch-all menu.**
 
-Read the [Fluent versus Material guide](docs/design/fluent-material-guide.md) and [customization architecture](docs/customization-architecture.md) before UI work.
+Read the normative [Fluent implementation standard](docs/design/fluent-implementation-standard.md), [Fluent versus Material guide](docs/design/fluent-material-guide.md), and [customization architecture](docs/customization-architecture.md) before UI work. Coding agents must also follow [`AGENTS.md`](AGENTS.md).
 
 ## Repository map
 
+- `AGENTS.md` — mandatory entry point for coding agents and automated contributors.
 - `context.md` — durable project facts and scope boundary.
 - `plan.md`, `ROADMAP.md` — gated execution plan and milestones.
+- `docs/design/fluent-implementation-standard.md` — normative design, implementation, testing, and publication requirements.
 - `docs/adr/` — architecture decisions.
 - `docs/design/` — terminology and design mapping.
 - `docs/host-bringup.md` — observed host/tool inventory and bring-up record.
@@ -38,7 +40,8 @@ Read the [Fluent versus Material guide](docs/design/fluent-material-guide.md) an
 - `docs/telegram-notifications.md` — private, low-noise feedback-channel setup and policy.
 - `scripts/` — strict, parameterized operational entry points.
 - `manifests/` — reviewed upstream and Fluent revision-locked Repo manifests.
-- `docs/adr/0002-project-repositories.md` — independent modified-project repository and manifest policy.
+- `docs/adr/0002-project-repositories.md` — historical transition from patches to project repositories.
+- `docs/adr/0003-full-history-independent-repositories.md` — current independent, non-fork, full-upstream-history and authorship policy.
 
 ## Quick start
 
@@ -103,4 +106,4 @@ No script pushes or publishes. Only the explicit Telegram setup/notifier and doc
 
 ## Status
 
-M0–M3 are complete: the source tree is revision-locked, the product builds reproducibly, and the same-build Cuttlefish evidence loop is stable. Modified projects now live in independent `Fluent-AOSP` repositories selected by the pinned [`Fluent-AOSP/android`](https://github.com/Fluent-AOSP/android) manifest rather than an ordered patch queue. M4 currently publishes SystemUI work through [`platform_frameworks_base`](https://github.com/Fluent-AOSP/platform_frameworks_base) commit `e40e612abb23`; the next visual pass will realign Quick Settings structure with the supplied Windows 11 flyout reference, not merely its colors. See [ROADMAP.md](ROADMAP.md) and the [Quick Settings foundation](docs/design/quick-settings-foundation.md).
+M0–M3 are complete: the source tree is revision-locked, the product builds reproducibly, and the same-build Cuttlefish evidence loop is stable. Modified projects live in independent, non-fork `Fluent-AOSP` repositories with complete upstream history and are selected by the pinned [`Fluent-AOSP/android`](https://github.com/Fluent-AOSP/android) manifest. M4 publishes the expanded Quick Settings implementation through [`platform_frameworks_base`](https://github.com/Fluent-AOSP/platform_frameworks_base) commit `9f0e6acdc035`; expanded-state hardening and the separate collapsed-state design remain in progress. See the [implementation standard](docs/design/fluent-implementation-standard.md), [ROADMAP.md](ROADMAP.md), and [Quick Settings foundation](docs/design/quick-settings-foundation.md).

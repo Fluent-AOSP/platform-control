@@ -2,15 +2,31 @@
 
 ## Scope
 
+> **Normative policy:** all new work follows the [Fluent AOSP implementation standard](fluent-implementation-standard.md). The validation sections below retain snapshot-era source IDs as historical evidence. After the full-history/authorship migration, their equivalent full-history commits are the `Historical local commit` IDs shown in each batch; the current Fluent branch head is `9f0e6acdc0353da1b32b7868378e7c4908779d4a`.
+
 M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth added a scoped Windows-blue and cool-neutral color/material system; the sixth extends that system to the panel and brightness control. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
 Windows 11 Quick Settings is the canonical visual reference. The Android implementation should be recognizably similar as a complete system—compact control geometry, flat split controls, restrained strokes, dense spacing, overlay materials, typography proportions, and motion—while retaining Android gestures, state production, security, accessibility, and adaptive layout.
 
-## Canonical flyout composition
+## Current full-history head status
 
-The supplied Windows 11 reference at `https://www.pasteboard.co/xiyHrUnntRgT.png` corrects the earlier overemphasis on isolated colors and corner tokens. The resolved 466×560 PNG has SHA-256 `abdf6956b72f6a4a19c461b9cc648b0a6f7d9b1d80b07ed887748eeacddf18e1`; a verification copy is retained outside Git at `/home/azureuser/android-test-artifacts/design-references/windows11-quick-settings-xiyHrUnntRgT.png`. The third-party image is not redistributed in the public repository pending licensing review. The current Android result is technically validated but is not visually accepted as a faithful Fluent composition.
+Current published source: `9f0e6acdc0353da1b32b7868378e7c4908779d4a`.
 
-The reference establishes these non-negotiable structural relationships:
+Status terms are intentionally separate:
+
+- **Implemented/published:** expanded composition, curated icons, scoped optional Segoe family, Acrylic roles, split controls, brightness/volume rails, and mute/level volume artwork are present in the published source.
+- **Compiled:** an exact-head `OUT_DIR=out-fluent m SystemUI -j8` completed successfully during the publication session. No standalone build-log artifact was retained, so this is an attested compile rather than archived build evidence.
+- **Runtime-smoke verified:** the exact public-source APK was hot-deployed after provisioning the optional font only on the private test device. The dark expanded screenshot is `/home/azureuser/android-test-artifacts/fast-iteration-cvd/cycle-pushed-device-segoe-18-dark/quick-settings-expanded-dark.png`; its targeted failure scan is empty at `failure-signals.txt` in the same directory.
+- **Reviewed:** the final license and medium-weight fixes received independent review with no remaining Blocker or High finding. This review did not replace full SystemUI test or product validation.
+- **Not yet finally accepted:** focused exact-head tests, product build, full adaptive/accessibility/fallback matrix, clean same-input Cuttlefish pair, and fresh-checkout validation remain required.
+
+Earlier batch evidence below remains valid historical evidence for the tree states it records; it MUST NOT be represented as final acceptance of the current head.
+
+## Approved project flyout composition
+
+Official Windows 11 and Fluent guidance is authoritative. The supplied third-party Windows-like reference at `https://www.pasteboard.co/xiyHrUnntRgT.png` is supporting composition evidence only: its Windows build, capture provenance, and redistribution rights are not established. The resolved 466×560 PNG has SHA-256 `abdf6956b72f6a4a19c461b9cc648b0a6f7d9b1d80b07ed887748eeacddf18e1`; a verification copy is retained outside Git at `/home/azureuser/android-test-artifacts/design-references/windows11-quick-settings-xiyHrUnntRgT.png`. It is not redistributed publicly pending licensing review and MUST NOT be used alone to claim an official Microsoft value.
+
+The project approves the following structural relationships as Android adaptation requirements, based on official Fluent principles and corroborated by the reference:
 
 - One floating, dark Acrylic-like flyout with a distinct footer band, rather than a collection of large Android cards filling the entire shade.
 - The canonical initial visible arrangement shows six controls in a three-column by two-row grid. Each control has a compact rectangular icon surface with its text label below the surface, not inside a wide two-column tile. Android's arbitrary user-configured tile set, paging, ordering, and edit operations remain supported beyond that initial viewport.
