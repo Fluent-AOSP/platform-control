@@ -2,7 +2,7 @@
 
 ## Scope
 
-> **Normative policy:** all new work follows the [Fluent AOSP implementation standard](fluent-implementation-standard.md). The validation sections below retain snapshot-era source IDs as historical evidence. After the full-history/authorship migration, their equivalent full-history commits are the `Historical local commit` IDs shown in each batch; the current Fluent branch head is `30634ab7b94629146d13f2b5ac97cb5b5dd71c6f`.
+> **Normative policy:** all new work follows the [Fluent AOSP implementation standard](fluent-implementation-standard.md). The validation sections below retain snapshot-era source IDs as historical evidence. After the full-history/authorship migration, their equivalent full-history commits are the `Historical local commit` IDs shown in each batch; the current Fluent branch head is `30fb4c2a3e2b8ae3ff9d69598c979fae5f4e6a04`.
 
 M4 starts at the shared Android 17 Compose renderer. The first three batches established semantic tile, layout, and chrome seams; the fourth used those seams for a cohesive Windows 11-aligned composition; the fifth added a scoped Windows-blue and cool-neutral color/material system; the sixth extends that system to the panel and brightness control. The work does not change tile state production, layout count, touch targets, clicks, long-clicks, slider behavior, accessibility semantics, connectivity behavior, or lockscreen policy.
 
@@ -10,15 +10,15 @@ Windows 11 Quick Settings is the canonical visual reference. The Android impleme
 
 ## Current full-history head status
 
-Current published source: `30634ab7b94629146d13f2b5ac97cb5b5dd71c6f`.
+Current published source: `30fb4c2a3e2b8ae3ff9d69598c979fae5f4e6a04`.
 
 Status terms are intentionally separate:
 
-- **Implemented/published:** expanded composition, curated icons, scoped optional Segoe family, Acrylic roles, split controls, brightness/volume rails, mute/level volume artwork, and the separate phone-collapsed first-four-control composition are present in the published source. Collapsed transparency is restricted to unlocked phone portrait when the shade-blur flag and runtime blur support are both active; landscape, `sw600dp`, protected, and no-blur states retain platform or opaque scrims.
-- **Compiled:** an exact-head `OUT_DIR=out-fluent m SystemUI -j8` completed successfully. Archived build evidence is `/home/azureuser/android-test-artifacts/collapsed-qqs-aligned-predicate-build-20260814T125044Z/`.
-- **Runtime-smoke verified:** the exact public-source APK was hot-deployed after provisioning the optional font only on the private test device. The dark expanded screenshot is `/home/azureuser/android-test-artifacts/fast-iteration-cvd/cycle-pushed-device-segoe-18-dark/quick-settings-expanded-dark.png`; its targeted failure scan is empty at `failure-signals.txt` in the same directory.
-- **Reviewed:** the final license and medium-weight fixes received independent review with no remaining Blocker or High finding. This review did not replace full SystemUI test or product validation.
-- **Not yet finally accepted:** focused exact-head tests, product build, full adaptive/accessibility/fallback matrix, clean same-input Cuttlefish pair, and fresh-checkout validation remain required.
+- **Implemented/published:** expanded Fluent composition remains intact. Phone-portrait collapsed Quick Settings renders the first four user-ordered controls in a 2×2 grid with real split actions. Alerting and silent notifications form one visual list without changing Android buckets. Inactive QS tiles and notification cards share runtime-selected shell-card fill/stroke roles; active, unavailable, toolbar/footer/edit, and rail roles remain distinct. Landscape, `sw600dp`, protected, and unsupported-blur states retain adaptive or opaque paths.
+- **Compiled:** exact-head `OUT_DIR=out-fluent m SystemUI -j8` completed successfully. Consolidated evidence is `/home/azureuser/android-test-artifacts/fast-iteration-cvd/cycle-unified-shell-surfaces-20260817/`.
+- **Runtime-smoke verified:** the final public-source APK was hot-deployed with matching local/device SHA-256 `c3becd164fbf29ad6cfcd49d20a4d21ab5c9d829f48a94de29b004434c9da7b7`. Dark, light, and dark no-blur captures retain four collapsed controls, three notification rows, no silent header, and a clean targeted crash/ANR scan.
+- **Reviewed:** independent review resolved all Blocker, High, and Medium findings for the published slice. This review does not replace the blocked focused test module or full product validation.
+- **Not yet finally accepted:** `SystemUITests` remains blocked by an unrelated `SystemUI_test_fixtures` compile error. Product build, full adaptive/accessibility/privacy/DND/global-clear matrix, clean same-input Cuttlefish pair, and fresh-checkout validation remain required.
 
 Earlier batch evidence below remains valid historical evidence for the tree states it records; it MUST NOT be represented as final acceptance of the current head.
 
@@ -37,6 +37,74 @@ The project approves the following structural relationships as Android adaptatio
 - System clock and status information remain outside the flyout. On Android they may remain in the platform-owned shade header, but must not dominate or visually merge with the Fluent control panel.
 
 On the 360 dp reference phone width, the Android translation should target roughly 16 dp panel padding, 8–12 dp column gaps, three approximately 100 dp tile columns, 56–60 dp visible tile surfaces, and 48 dp minimum interaction bounds. Labels may wrap or ellipsize according to Android locale and font-scale rules. Android continues to own tile state, long press, editing, brightness semantics, insets, lockscreen privacy, and accessibility.
+
+## Collapsed phone and notification contract
+
+This contract governs the published phone-portrait collapsed shade implementation. Published and runtime-smoke verified do not constitute final visual acceptance.
+
+| Field | Collapsed Quick Settings | Notification cards |
+|---|---|---|
+| Purpose | Expose the first four user-ordered controls during the first shade pull. | Keep live Android notifications readable as individual surfaces below the collapsed controls. |
+| Fluent reference | Compact rectangular controls, labels below surfaces, restrained strokes, and genuine split-control affordances. | Calm neutral surfaces with a restrained stroke over the transient Acrylic shade. |
+| Android behavior | `QuickQuickSettingsViewModel` retains tile order, state, click, long-click, secondary-click, haptics, and expansion ownership. | Existing notification row state, expansion, actions, grouping, focus, redaction, tint, and policy remain platform-owned. |
+| Visual anatomy | Two columns by two rows; 56 dp surfaces; labels below; dual-target separator and chevron rendered only for real secondary actions. | Semantic translucent and opaque neutral fills plus a 1 dp stroke; existing row content and focus overlay remain intact. |
+| Adaptation | Applies only through `config_use_fluent_compact_qqs`; existing landscape, `sw600dp`, media, and flag-disabled paths remain separate. RTL uses the existing grid and directional-vector mirroring; labels retain scalable platform typography. | Translucent fill is used only when notification-row transparency and runtime blur support select the transparent background; otherwise the opaque role is used. Existing keyguard/privacy rules continue to decide transparency. |
+| Tests | First four controls in user order; two-by-two geometry; labels below surfaces; 56 dp surface and 48 dp secondary target; main/secondary click mapping; separator and chevron presence. | Semantic alpha roles; translucent/opaque runtime selection; existing row tint, focus, and blur behavior. |
+| Licensing | Existing platform code and the already reviewed pinned Fluent chevron asset; no new font or asset dependency. | Resource-only shapes and colors; no external asset dependency. |
+
+### Prototype state matrix
+
+| State or configuration | Required result |
+|---|---|
+| Active / inactive / unavailable tile | Existing `TileUiState` remains authoritative; fill, foreground, stroke, and disabled treatment stay distinguishable without changing actions. |
+| Dual-target tile | Main surface invokes the primary click; the separated 48 dp target invokes the real secondary click; long click remains platform-owned. |
+| Fewer than four configured tiles | Render only the available tiles in user order; do not synthesize placeholders. |
+| Expansion | Native shade gesture and scene transition reveal expanded Quick Settings; the collapsed prototype does not introduce a separate expansion state machine. |
+| RTL / 200% font scale | Grid order follows platform directionality; chevrons mirror; labels scale, wrap, or ellipsize under existing Android typography rules without reducing interaction targets. |
+| Blur supported, unlocked | Collapsed shade and notification cards may use their scoped translucent roles over compositor-owned blur. |
+| No blur, protected, or transparency disabled | Select opaque roles or the existing platform scrim; do not expose protected content or retain content-blurring effects. |
+| Landscape / `sw600dp` / feature disabled | Preserve the existing adaptive or platform topology rather than forcing the phone-portrait two-by-two composition. |
+
+### Combined notification-list contract
+
+The Fluent shade presents alerting and silent notification cards as one visual list. Android notification importance and interruption semantics remain unchanged.
+
+| Field | Required result |
+|---|---|
+| Purpose | Remove the standalone `Silent` heading and its section gap so adjacent live notification cards read as one list. |
+| Behavior ownership | Ranking, sound/vibration, heads-up eligibility, status icons, clearability, lockscreen visibility, DND, grouping, and notification statistics remain platform-owned. Silent entries retain `BUCKET_SILENT`; they are not reclassified as alerting. |
+| Visual anatomy | The silent and minimized pipeline sections expose no header node. Visual section-boundary calculations map `BUCKET_SILENT` to the alerting visual bucket, suppressing the gap and section-only roundness between adjacent alerting and silent rows. |
+| Actions | Row expansion, notification actions, per-row dismissal, and the global clear action remain unchanged. No decorative replacement for the removed section action is added. |
+| Fallback | `config_use_fluent_combined_notification_list=false` restores the platform silent header and separate visual boundary. |
+| Tests | Silent/minimized sectioners have no header when enabled; alerting-to-silent rows do not begin a new visual section; actual silent bucket identity remains unchanged. Runtime evidence must show adjacent cards without a `Silent` label. |
+
+#### Notification card color mapping
+
+The source tokens below come from Microsoft `microsoft-ui-xaml` commit `6112d936461edb6d81ce7db983c74cc60ea2bc28`, `controls/dev/CommonStyles/Common_themeresources_any.xaml`. Direct rows reproduce official generic WinUI semantic-token values; the translucent row is a derived Android source-over composition of two such tokens. This source does not establish proprietary Windows notification-shell values, so runtime comparison with Microsoft's published Notification Center guidance remains a separate visual-evidence gate.
+
+| Android semantic role | WinUI token | Light | Dark | Use |
+|---|---|---:|---:|---|
+| `fluent_notification_card_translucent` | `ControlOnImageFillColorDefault` under `CardBackgroundFillColorDefault` | `#EFFFFFFF` | `#B72C2C2C` | Exact source-over composition for a resting card directly over Android wallpaper blur |
+| `fluent_notification_card_opaque` | `SolidBackgroundFillColorQuarternary` | `#FFFFFFFF` | `#FF2C2C2C` | No-blur/protected opaque fallback |
+| `fluent_notification_card_stroke` | `CardStrokeColorDefault` | `#0F000000` | `#19000000` | 1 dp card boundary |
+| `fluent_notification_card_hover` | `SubtleFillColorSecondary` | `#09000000` | `#0FFFFFFF` | Pointer hover layer |
+| `fluent_notification_card_pressed` | `SubtleFillColorTertiary` | `#06000000` | `#0AFFFFFF` | Touch/pressed layer |
+
+Android continues to own app-provided notification artwork, status color, RemoteViews content, disabled behavior, focus visibility, and accessibility contrast enforcement. WinUI cards normally sit on a material or solid parent. Android notification rows instead sit directly over blurred wallpaper, so the translucent role precomposes WinUI `CardBackgroundFillColorDefault` over `ControlOnImageFillColorDefault`: light `#B3FFFFFF` over `#C9FFFFFF`, dark `#0DFFFFFF` over `#B31C1C1C`. The opaque fallback uses WinUI's solid quaternary background rather than flattening against an arbitrary wallpaper.
+
+##### Unified shell surface hierarchy
+
+Collapsed Quick Settings and notification cards share the same resting shell-card layer so the shade reads as one Fluent flyout instead of two unrelated palettes.
+
+| Level | Surfaces | Role |
+|---|---|---|
+| Acrylic base | Shade behind QS and notifications | Existing compositor blur plus scoped panel/scrim tint |
+| Resting card/control | Inactive QS tile surfaces and notification cards | Shared `fluent_shell_card_fill_translucent_*` and `fluent_shell_card_stroke_*` roles |
+| Solid fallback | The same surfaces when blur is unavailable or protected | Shared `fluent_shell_card_fill_opaque_*` roles |
+| Selected | Active QS controls only | Audited Windows-blue accent/content pair |
+| Secondary | Rails, toolbar/footer controls, unavailable tiles | Existing secondary/disabled roles; these remain distinct from resting cards to preserve state hierarchy |
+
+The shared role is a visual relationship, not a behavior merge. Notification importance and QS activation state remain independent Android contracts.
 
 ## Android 17 implementation inventory
 
