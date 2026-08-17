@@ -2,9 +2,9 @@
 <manifest>
   <remote name="aosp" fetch="https://android.googlesource.com/" review="https://android-review.googlesource.com/"/>
   <remote name="fluent" fetch="https://github.com/Fluent-AOSP/"/>
-
+  
   <default remote="aosp" revision="android17-release" sync-j="4"/>
-
+  
   <project name="device/amlogic/yukawa" revision="cfa1b7f9bf57241b719ea2b1ddcfdd76f26079b9" upstream="android17-release" dest-branch="android17-release" groups="device,yukawa,pdk"/>
   <project name="device/amlogic/yukawa-kernel" revision="ff822d1ec33dc9a8225d34a1c576f8af26fdb0fd" upstream="android17-release" dest-branch="android17-release" groups="device,yukawa,pdk" clone-depth="2"/>
   <project name="device/common" revision="9e48dd8859c3eb6b911bcc9d1ce48a4278bd03f5" upstream="android17-release" dest-branch="android17-release" groups="pdk-cw-fs,pdk"/>
@@ -1069,7 +1069,7 @@
     <linkfile src="root.bp" dest="Android.bp"/>
     <linkfile src="bootstrap.bash" dest="bootstrap.bash"/>
   </project>
-  <project name="platform_frameworks_base" path="frameworks/base" remote="fluent" revision="30634ab7b94629146d13f2b5ac97cb5b5dd71c6f" upstream="fluent-android17" dest-branch="fluent-android17" groups="pdk-cw-fs,pdk-fs,sysui-studio"/>
+  <project name="platform_frameworks_base" path="frameworks/base" remote="fluent" revision="30fb4c2a3e2b8ae3ff9d69598c979fae5f4e6a04" upstream="fluent-android17" dest-branch="fluent-android17" groups="pdk-cw-fs,pdk-fs,sysui-studio"/>
   <project name="toolchain/pgo-profiles" revision="44bae3346df2d8657cde54a5ee069067d607e689" upstream="android17-release" dest-branch="android17-release" groups="pdk" clone-depth="1"/>
   <project name="tools/platform-compat" revision="19ce1c9d406cec9feaf76618e7d772113883d73f" upstream="android17-release" dest-branch="android17-release" groups="pdk-cw-fs,pdk-fs,pdk,sysui-studio"/>
   <project name="trusty/app/authmgr" path="trusty/user/app/authmgr" revision="b53363e45aad47c92ec1ecc4b94881727c13ad8d" upstream="android17-release" dest-branch="android17-release" groups="trusty,pdk"/>
@@ -1104,6 +1104,6 @@
   <project name="trusty/vendor/google/aosp" revision="93e3ca36bc59e5d357b226e4e5254f8e478213f2" upstream="android17-release" dest-branch="android17-release" groups="trusty,pdk">
     <copyfile src="lk_inc.mk" dest="lk_inc.mk"/>
   </project>
-
+  
   <contactinfo bugurl="go/repo-bug"/>
 </manifest>
